@@ -72,6 +72,7 @@ trait FieldSanitizer {
 			case 'post':
 			case 'user':
 			case 'term':
+			case 'ajax':
 				return $this->sanitize_relational( $value, $field );
 
 			case 'group':

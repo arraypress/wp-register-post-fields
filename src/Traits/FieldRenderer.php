@@ -140,6 +140,10 @@ trait FieldRenderer {
                 $this->render_repeater( $meta_key, $field, $value, $post_id );
                 break;
 
+            case 'ajax':
+                $this->render_ajax_select( $meta_key, $field, $value );
+                break;
+
             case 'url':
             case 'email':
             case 'text':
@@ -614,6 +618,45 @@ trait FieldRenderer {
     }
 
     /**
+     * Render an AJAX-powered select field.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param mixed  $value    The current field value.
+     *
+     * @return void
+     */
+    protected function render_ajax_select( string $meta_key, array $field, $value ): void {
+        $multiple    = ! empty( $field['multiple'] );
+        $placeholder = $field['placeholder'] ?? __( 'Search...', 'arraypress' );
+        $name        = $multiple ? $meta_key . '[]' : $meta_key;
+        $values      = $multiple ? (array) $value : ( $value ? [ $value ] : [] );
+        $values      = array_filter( $values ); // Remove empty values
+
+        // Get metabox ID from the config
+        $metabox_id = $this->id;
+
+        ?>
+        <select class="arraypress-ajax-select<?php echo $multiple ? ' multiple' : ''; ?>"
+                id="<?php echo esc_attr( $meta_key ); ?>"
+                name="<?php echo esc_attr( $name ); ?>"
+                <?php echo $multiple ? 'multiple' : ''; ?>
+                data-metabox-id="<?php echo esc_attr( $metabox_id ); ?>"
+                data-field-key="<?php echo esc_attr( $meta_key ); ?>"
+                data-placeholder="<?php echo esc_attr( $placeholder ); ?>">
+            <?php
+            // Pre-populate with existing values (labels will be hydrated via AJAX)
+            foreach ( $values as $val ) :
+                ?>
+                <option value="<?php echo esc_attr( $val ); ?>" selected>
+                    <?php echo esc_html( $val ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <?php
+    }
+
+    /**
      * Render a group field.
      *
      * @param string $meta_key The field's meta key.
@@ -860,6 +903,31 @@ trait FieldRenderer {
                         <?php esc_html_e( 'Remove', 'arraypress' ); ?>
                     </button>
                 </div>
+                <?php
+                break;
+
+            case 'ajax':
+                $multiple    = ! empty( $field['multiple'] );
+                $placeholder = $field['placeholder'] ?? 'Search...';
+                $name_attr   = $multiple ? $name . '[]' : $name;
+                $values      = $multiple ? (array) $value : ( $value ? [ $value ] : [] );
+                $values      = array_filter( $values );
+
+                // Get metabox ID - need to pass this through or access from $this
+                $metabox_id = $this->id;
+                ?>
+                <select class="arraypress-ajax-select<?php echo $multiple ? ' multiple' : ''; ?>"
+                        name="<?php echo esc_attr( $name_attr ); ?>"
+                        <?php echo $multiple ? 'multiple' : ''; ?>
+                        data-metabox-id="<?php echo esc_attr( $metabox_id ); ?>"
+                        data-field-key="<?php echo esc_attr( $key ); ?>"
+                        data-placeholder="<?php echo esc_attr( $placeholder ); ?>">
+                    <?php foreach ( $values as $val ) : ?>
+                        <option value="<?php echo esc_attr( $val ); ?>" selected>
+                            <?php echo esc_html( $val ); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
                 <?php
                 break;
 

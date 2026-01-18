@@ -10,6 +10,9 @@
 (function ($) {
     'use strict';
 
+    // Configuration from PHP (localized)
+    var config = window.arraypressPostFields || {};
+
     /**
      * Post Fields Controller
      */
@@ -24,6 +27,7 @@
             this.initGalleryFields();
             this.initRepeaterFields();
             this.initConditionalLogic();
+            this.initAjaxSelects();
         },
 
         /**
@@ -252,6 +256,7 @@
          * @param {jQuery} $repeater The repeater container
          */
         addRepeaterRow: function ($repeater) {
+            var self = this;
             var $rows = $repeater.find('.arraypress-repeater__rows');
             var $template = $repeater.find('.arraypress-repeater__template');
             var max = parseInt($repeater.data('max')) || 0;
@@ -280,6 +285,11 @@
             // Initialize components in new row
             $newRow.find('.arraypress-color-picker').wpColorPicker();
 
+            // Initialize ajax selects in new row
+            $newRow.find('.arraypress-ajax-select').each(function () {
+                self.initSingleAjaxSelect($(this));
+            });
+
             // Evaluate conditional fields in the new row
             this.evaluateRowConditions($newRow);
         },
@@ -299,6 +309,9 @@
                 alert('Minimum items required');
                 return;
             }
+
+            // Destroy Select2 before removing
+            $row.find('.select2-hidden-accessible').select2('destroy');
 
             $row.remove();
             this.updateRepeaterIndexes($repeater);
@@ -566,6 +579,133 @@
             }
 
             return value;
+        },
+
+        /**
+         * Initialize all ajax select fields
+         */
+        initAjaxSelects: function () {
+            var self = this;
+
+            // Initialize all ajax selects not in templates
+            $('.arraypress-ajax-select').each(function () {
+                var $select = $(this);
+
+                // Skip if in a template
+                if ($select.closest('.arraypress-repeater__template').length) {
+                    return;
+                }
+
+                self.initSingleAjaxSelect($select);
+            });
+        },
+
+        /**
+         * Initialize a single ajax select field
+         *
+         * @param {jQuery} $select The select element
+         */
+        initSingleAjaxSelect: function ($select) {
+            var self = this;
+
+            // Skip if already initialized
+            if ($select.hasClass('select2-hidden-accessible')) {
+                return;
+            }
+
+            var metaboxId = $select.data('metabox-id');
+            var fieldKey = $select.data('field-key');
+            var isMultiple = $select.prop('multiple');
+            var placeholder = $select.data('placeholder') || 'Search...';
+            var restUrl = config.restUrl || '';
+            var nonce = config.nonce || '';
+
+            var select2Options = {
+                width: '100%',
+                allowClear: true,
+                placeholder: placeholder,
+                ajax: {
+                    url: restUrl,
+                    dataType: 'json',
+                    delay: 250,
+                    headers: {
+                        'X-WP-Nonce': nonce
+                    },
+                    data: function (params) {
+                        return {
+                            metabox_id: metaboxId,
+                            field_key: fieldKey,
+                            search: params.term || ''
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.map(function (item) {
+                                return {
+                                    id: item.value,
+                                    text: item.label
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            };
+
+            // Get current values BEFORE initializing Select2
+            var currentValues = $select.val();
+
+            // Initialize Select2
+            $select.select2(select2Options);
+
+            // Hydrate existing values (fetch labels for saved IDs)
+            if (currentValues && currentValues.length) {
+                var ids = Array.isArray(currentValues) ? currentValues : [currentValues];
+                ids = ids.filter(function (id) {
+                    return id && id !== '';
+                });
+
+                if (ids.length > 0) {
+                    self.hydrateAjaxSelect($select, ids, metaboxId, fieldKey, restUrl, nonce);
+                }
+            }
+        },
+
+        /**
+         * Hydrate ajax select with labels for existing values
+         *
+         * @param {jQuery} $select    The select element
+         * @param {Array}  ids        Array of IDs to hydrate
+         * @param {string} metaboxId  The metabox ID
+         * @param {string} fieldKey   The field key
+         * @param {string} restUrl    The REST URL
+         * @param {string} nonce      The WP nonce
+         */
+        hydrateAjaxSelect: function ($select, ids, metaboxId, fieldKey, restUrl, nonce) {
+            $.ajax({
+                url: restUrl,
+                data: {
+                    metabox_id: metaboxId,
+                    field_key: fieldKey,
+                    include: ids.join(',')
+                },
+                headers: {
+                    'X-WP-Nonce': nonce
+                }
+            }).done(function (results) {
+                // Clear existing options and add new ones with proper labels
+                $select.empty();
+
+                results.forEach(function (item) {
+                    var option = new Option(item.label, item.value, true, true);
+                    $select.append(option);
+                });
+
+                $select.trigger('change.select2');
+            }).fail(function () {
+                console.warn('Failed to hydrate ajax select:', fieldKey);
+            });
         }
     };
 

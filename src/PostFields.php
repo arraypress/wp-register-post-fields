@@ -95,6 +95,7 @@ class PostFields {
 		'amount_type' => null,
 		'group'       => null,
 		'repeater'    => null,
+		'ajax'        => null,
 	];
 
 	/**
@@ -331,6 +332,11 @@ class PostFields {
 			wp_enqueue_script( 'wp-color-picker' );
 		}
 
+		// Enqueue Select2 for ajax fields
+		if ( $this->has_field_type( 'ajax' ) ) {
+			$this->enqueue_select2();
+		}
+
 		// Enqueue custom assets only once
 		if ( ! self::$assets_enqueued ) {
 			$this->enqueue_library_assets();
@@ -344,7 +350,6 @@ class PostFields {
 	 * @return void
 	 */
 	protected function enqueue_library_assets(): void {
-		// Use composer-assets library for asset loading
 		wp_enqueue_composer_style(
 			'arraypress-post-fields',
 			__FILE__,
@@ -355,15 +360,40 @@ class PostFields {
 			'arraypress-post-fields',
 			__FILE__,
 			'js/post-fields.js',
-			[ 'jquery', 'jquery-ui-sortable', 'wp-color-picker' ],
-			false,
-			true
+			[ 'jquery', 'jquery-ui-sortable', 'wp-color-picker', 'arraypress-select2' ]
 		);
 
-		// Localize script with conditional logic data
+		// Initialize REST API if we have ajax fields
+		if ( $this->has_field_type( 'ajax' ) ) {
+			RestApi::instance();
+		}
+
+		// Localize script with configuration data
 		wp_localize_script( 'arraypress-post-fields', 'arraypressPostFields', [
 			'conditions' => $this->get_all_field_conditions(),
+			'restUrl'    => rest_url( 'arraypress-post-fields/v1/ajax' ),
+			'nonce'      => wp_create_nonce( 'wp_rest' ),
 		] );
+	}
+
+	/**
+	 * Enqueue Select2 library from composer assets.
+	 *
+	 * @return void
+	 */
+	protected function enqueue_select2(): void {
+		wp_enqueue_composer_style(
+			'arraypress-select2',
+			__FILE__,
+			'css/select2.min.css'
+		);
+
+		wp_enqueue_composer_script(
+			'arraypress-select2',
+			__FILE__,
+			'js/select2.min.js',
+			[ 'jquery' ]
+		);
 	}
 
 	/**

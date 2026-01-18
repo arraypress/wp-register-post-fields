@@ -7,7 +7,7 @@
  * @version 2.0.0
  */
 
-(function($) {
+(function ($) {
     'use strict';
 
     /**
@@ -18,7 +18,7 @@
         /**
          * Initialize all functionality
          */
-        init: function() {
+        init: function () {
             this.initColorPickers();
             this.initMediaFields();
             this.initGalleryFields();
@@ -29,25 +29,25 @@
         /**
          * Initialize color picker fields
          */
-        initColorPickers: function() {
+        initColorPickers: function () {
             $('.arraypress-color-picker').wpColorPicker();
         },
 
         /**
          * Initialize media (image/file) fields
          */
-        initMediaFields: function() {
+        initMediaFields: function () {
             var self = this;
 
             // Select media
-            $(document).on('click', '.arraypress-media-select', function(e) {
+            $(document).on('click', '.arraypress-media-select', function (e) {
                 e.preventDefault();
                 var $field = $(this).closest('.arraypress-media-field');
                 self.openMediaFrame($field);
             });
 
             // Remove media
-            $(document).on('click', '.arraypress-media-remove', function(e) {
+            $(document).on('click', '.arraypress-media-remove', function (e) {
                 e.preventDefault();
                 var $field = $(this).closest('.arraypress-media-field');
                 self.removeMedia($field);
@@ -59,18 +59,18 @@
          *
          * @param {jQuery} $field The media field container
          */
-        openMediaFrame: function($field) {
+        openMediaFrame: function ($field) {
             var $input = $field.find('.arraypress-media-input');
             var type = $field.data('type');
 
             var frame = wp.media({
                 title: type === 'image' ? 'Select Image' : 'Select File',
-                button: { text: 'Use this ' + type },
+                button: {text: 'Use this ' + type},
                 multiple: false,
-                library: type === 'image' ? { type: 'image' } : {}
+                library: type === 'image' ? {type: 'image'} : {}
             });
 
-            frame.on('select', function() {
+            frame.on('select', function () {
                 var attachment = frame.state().get('selection').first().toJSON();
                 $input.val(attachment.id).trigger('change');
 
@@ -96,7 +96,7 @@
          *
          * @param {jQuery} $field The media field container
          */
-        removeMedia: function($field) {
+        removeMedia: function ($field) {
             $field.find('.arraypress-media-input').val('').trigger('change');
             $field.find('.arraypress-media-preview, .arraypress-file-preview').empty();
             $field.find('.arraypress-media-remove').hide();
@@ -105,18 +105,18 @@
         /**
          * Initialize gallery fields
          */
-        initGalleryFields: function() {
+        initGalleryFields: function () {
             var self = this;
 
             // Add images
-            $(document).on('click', '.arraypress-gallery-add', function(e) {
+            $(document).on('click', '.arraypress-gallery-add', function (e) {
                 e.preventDefault();
                 var $field = $(this).closest('.arraypress-gallery-field');
                 self.openGalleryFrame($field);
             });
 
             // Remove single image
-            $(document).on('click', '.arraypress-gallery-remove', function(e) {
+            $(document).on('click', '.arraypress-gallery-remove', function (e) {
                 e.preventDefault();
                 var $item = $(this).closest('.arraypress-gallery-item');
                 var $field = $item.closest('.arraypress-gallery-field');
@@ -127,7 +127,7 @@
             $('.arraypress-gallery-preview').sortable({
                 items: '.arraypress-gallery-item',
                 cursor: 'move',
-                update: function(event, ui) {
+                update: function (event, ui) {
                     var $field = $(this).closest('.arraypress-gallery-field');
                     self.updateGalleryInput($field);
                 }
@@ -139,7 +139,7 @@
          *
          * @param {jQuery} $field The gallery field container
          */
-        openGalleryFrame: function($field) {
+        openGalleryFrame: function ($field) {
             var self = this;
             var $input = $field.find('.arraypress-gallery-input');
             var $preview = $field.find('.arraypress-gallery-preview');
@@ -147,16 +147,16 @@
 
             var frame = wp.media({
                 title: 'Select Images',
-                button: { text: 'Add to Gallery' },
+                button: {text: 'Add to Gallery'},
                 multiple: true,
-                library: { type: 'image' }
+                library: {type: 'image'}
             });
 
-            frame.on('select', function() {
+            frame.on('select', function () {
                 var attachments = frame.state().get('selection').toJSON();
                 var currentIds = $input.val() ? $input.val().split(',') : [];
 
-                attachments.forEach(function(attachment) {
+                attachments.forEach(function (attachment) {
                     if (max > 0 && currentIds.length >= max) return;
                     if (currentIds.indexOf(String(attachment.id)) !== -1) return;
 
@@ -185,7 +185,7 @@
          * @param {jQuery} $item  The gallery item to remove
          * @param {jQuery} $field The gallery field container
          */
-        removeGalleryItem: function($item, $field) {
+        removeGalleryItem: function ($item, $field) {
             $item.remove();
             this.updateGalleryInput($field);
         },
@@ -195,11 +195,11 @@
          *
          * @param {jQuery} $field The gallery field container
          */
-        updateGalleryInput: function($field) {
+        updateGalleryInput: function ($field) {
             var $input = $field.find('.arraypress-gallery-input');
             var ids = [];
 
-            $field.find('.arraypress-gallery-item').each(function() {
+            $field.find('.arraypress-gallery-item').each(function () {
                 ids.push($(this).data('id'));
             });
 
@@ -209,18 +209,18 @@
         /**
          * Initialize repeater fields
          */
-        initRepeaterFields: function() {
+        initRepeaterFields: function () {
             var self = this;
 
             // Add row
-            $(document).on('click', '.arraypress-repeater__add', function(e) {
+            $(document).on('click', '.arraypress-repeater__add', function (e) {
                 e.preventDefault();
                 var $repeater = $(this).closest('.arraypress-repeater');
                 self.addRepeaterRow($repeater);
             });
 
             // Remove row
-            $(document).on('click', '.arraypress-repeater__row-remove', function(e) {
+            $(document).on('click', '.arraypress-repeater__row-remove', function (e) {
                 e.preventDefault();
                 var $repeater = $(this).closest('.arraypress-repeater');
                 var $row = $(this).closest('.arraypress-repeater__row');
@@ -228,7 +228,7 @@
             });
 
             // Toggle row collapse
-            $(document).on('click', '.arraypress-repeater__row-toggle', function(e) {
+            $(document).on('click', '.arraypress-repeater__row-toggle', function (e) {
                 e.preventDefault();
                 $(this).closest('.arraypress-repeater__row').toggleClass('is-collapsed');
             });
@@ -239,7 +239,7 @@
                 items: '.arraypress-repeater__row',
                 cursor: 'move',
                 placeholder: 'arraypress-repeater__row ui-sortable-placeholder',
-                update: function(event, ui) {
+                update: function (event, ui) {
                     var $repeater = $(this).closest('.arraypress-repeater');
                     self.updateRepeaterIndexes($repeater);
                 }
@@ -251,7 +251,7 @@
          *
          * @param {jQuery} $repeater The repeater container
          */
-        addRepeaterRow: function($repeater) {
+        addRepeaterRow: function ($repeater) {
             var $rows = $repeater.find('.arraypress-repeater__rows');
             var $template = $repeater.find('.arraypress-repeater__template');
             var max = parseInt($repeater.data('max')) || 0;
@@ -266,7 +266,7 @@
             var $newRow = $($template.html());
 
             // Replace placeholder index with actual index
-            $newRow.find('[name]').each(function() {
+            $newRow.find('[name]').each(function () {
                 var name = $(this).attr('name');
                 $(this).attr('name', name.replace('__INDEX__', newIndex));
             });
@@ -280,8 +280,8 @@
             // Initialize components in new row
             $newRow.find('.arraypress-color-picker').wpColorPicker();
 
-            // Initialize conditional logic for new row (with event binding)
-            this.initRowConditionalLogic($newRow);
+            // Evaluate conditional fields in the new row
+            this.evaluateRowConditions($newRow);
         },
 
         /**
@@ -290,7 +290,7 @@
          * @param {jQuery} $repeater The repeater container
          * @param {jQuery} $row      The row to remove
          */
-        removeRepeaterRow: function($repeater, $row) {
+        removeRepeaterRow: function ($repeater, $row) {
             var $rows = $repeater.find('.arraypress-repeater__rows');
             var min = parseInt($repeater.data('min')) || 0;
             var currentCount = $rows.find('.arraypress-repeater__row').length;
@@ -309,15 +309,15 @@
          *
          * @param {jQuery} $repeater The repeater container
          */
-        updateRepeaterIndexes: function($repeater) {
+        updateRepeaterIndexes: function ($repeater) {
             var metaKey = $repeater.data('meta-key');
 
-            $repeater.find('.arraypress-repeater__rows .arraypress-repeater__row').each(function(index) {
+            $repeater.find('.arraypress-repeater__rows .arraypress-repeater__row').each(function (index) {
                 var $row = $(this);
                 $row.attr('data-index', index);
                 $row.find('.arraypress-repeater__row-title').text('Item ' + (index + 1));
 
-                $row.find('[name]').each(function() {
+                $row.find('[name]').each(function () {
                     var name = $(this).attr('name');
                     var newName = name.replace(/\[\d+\]/, '[' + index + ']');
                     $(this).attr('name', newName);
@@ -326,160 +326,114 @@
         },
 
         /**
-         * Initialize conditional field logic
+         * Initialize conditional field logic using event delegation
          */
-        initConditionalLogic: function() {
+        initConditionalLogic: function () {
             var self = this;
 
-            // Find all conditional fields and set up listeners
-            $('.arraypress-metabox').find('[data-show-when]').each(function() {
-                var $field = $(this);
-                var $row = $field.closest('.arraypress-repeater__row');
+            // Use event delegation on the document for all form changes
+            // This handles both existing and dynamically added elements
+            $(document).on('change input', '.arraypress-metabox input, .arraypress-metabox select, .arraypress-metabox textarea', function () {
+                var $input = $(this);
 
-                // Skip fields inside the template
-                if ($field.closest('.arraypress-repeater__template').length) {
+                // Ignore inputs in the template
+                if ($input.closest('.arraypress-repeater__template').length) {
                     return;
                 }
 
-                // Skip fields inside repeater rows - they'll be initialized separately
+                // Check if we're in a repeater row
+                var $row = $input.closest('.arraypress-repeater__row');
+
                 if ($row.length) {
+                    // We're in a repeater row - evaluate conditions within this row
+                    self.evaluateRowConditions($row);
+                } else {
+                    // Top-level field or group - evaluate all conditions in the metabox
+                    var $metabox = $input.closest('.arraypress-metabox');
+                    self.evaluateMetaboxConditions($metabox);
+                }
+            });
+
+            // Initial evaluation of all conditional fields
+            this.evaluateAllConditions();
+        },
+
+        /**
+         * Evaluate all conditional fields on the page
+         */
+        evaluateAllConditions: function () {
+            var self = this;
+
+            $('.arraypress-metabox').each(function () {
+                self.evaluateMetaboxConditions($(this));
+            });
+
+            // Evaluate fields in existing repeater rows (not template)
+            $('.arraypress-repeater__rows .arraypress-repeater__row').each(function () {
+                self.evaluateRowConditions($(this));
+            });
+        },
+
+        /**
+         * Evaluate all conditional fields in a metabox (excluding repeater rows)
+         *
+         * @param {jQuery} $metabox The metabox container
+         */
+        evaluateMetaboxConditions: function ($metabox) {
+            var self = this;
+
+            // Find conditional fields that are direct children or in groups (but not in repeaters)
+            $metabox.find('[data-show-when]').each(function () {
+                var $field = $(this);
+
+                // Skip if inside a repeater row or template
+                if ($field.closest('.arraypress-repeater__row, .arraypress-repeater__template').length) {
                     return;
                 }
 
-                self.bindConditionalField($field);
-            });
-
-            // Initialize existing repeater rows
-            $('.arraypress-repeater__rows .arraypress-repeater__row').each(function() {
-                self.initRowConditionalLogic($(this));
+                self.evaluateSingleField($field, $metabox);
             });
         },
 
         /**
-         * Bind conditional logic for a single field
-         *
-         * @param {jQuery} $field The conditional field
-         */
-        bindConditionalField: function($field) {
-            var self = this;
-            var conditions = $field.data('show-when');
-
-            if (!conditions || !conditions.length) return;
-
-            // Set up change listeners for each controller field
-            conditions.forEach(function(condition) {
-                var $context = $field.closest('.arraypress-repeater__row, .arraypress-group, .arraypress-metabox');
-                var $controller = self.findControllerField(condition.field, $context);
-
-                if ($controller.length) {
-                    // Bind change event directly to the controller element
-                    $controller.on('change input', function() {
-                        self.evaluateFieldVisibility($field, conditions);
-                    });
-                }
-            });
-
-            // Initial evaluation
-            self.evaluateFieldVisibility($field, conditions);
-        },
-
-        /**
-         * Initialize conditional logic for a specific row (used for new repeater rows)
+         * Evaluate conditional fields within a repeater row
          *
          * @param {jQuery} $row The repeater row
          */
-        initRowConditionalLogic: function($row) {
+        evaluateRowConditions: function ($row) {
             var self = this;
 
-            $row.find('[data-show-when]').each(function() {
-                var $field = $(this);
-                var conditions = $field.data('show-when');
-
-                if (!conditions || !conditions.length) return;
-
-                // Bind change events to controller fields within this row
-                conditions.forEach(function(condition) {
-                    var $controller = self.findControllerField(condition.field, $row);
-
-                    if ($controller.length) {
-                        // Use .off().on() to prevent duplicate bindings
-                        $controller.off('change.conditional input.conditional')
-                            .on('change.conditional input.conditional', function() {
-                                self.evaluateFieldVisibility($field, conditions);
-                            });
-                    }
-                });
-
-                // Initial evaluation within row context
-                self.evaluateFieldVisibility($field, conditions);
+            $row.find('[data-show-when]').each(function () {
+                self.evaluateSingleField($(this), $row);
             });
         },
 
         /**
-         * Find the controller field element
+         * Evaluate a single conditional field
          *
-         * @param {string} fieldKey The field key
-         * @param {jQuery} $context The context element
-         * @return {jQuery} The controller field input element
+         * @param {jQuery} $field   The field wrapper with data-show-when
+         * @param {jQuery} $context Context for finding controller fields
          */
-        findControllerField: function(fieldKey, $context) {
-            var $input;
+        evaluateSingleField: function ($field, $context) {
+            var conditions = $field.data('show-when');
 
-            // Try to find within context first (for repeater/group fields)
-            $input = $context.find('[data-field-key="' + fieldKey + '"]').find('input, select, textarea').first();
-
-            // Fall back to document-level search for top-level fields
-            if (!$input.length) {
-                $input = $('[name="' + fieldKey + '"], [name="' + fieldKey + '[]"]').first();
+            if (!conditions || !Array.isArray(conditions) || !conditions.length) {
+                return;
             }
 
-            return $input;
-        },
-
-        /**
-         * Get the selector for a controller field (deprecated - use findControllerField instead)
-         *
-         * @param {string} fieldKey The field key
-         * @param {jQuery} $context The context element (for finding within groups/repeaters)
-         * @return {string} jQuery selector
-         */
-        getFieldSelector: function(fieldKey, $context) {
-            // Check if we're in a repeater or group context
-            var $parent = $context.closest('.arraypress-repeater__row, .arraypress-group');
-
-            if ($parent.length) {
-                // Within repeater/group - look for field within same parent
-                return '[data-field-key="' + fieldKey + '"] input, ' +
-                    '[data-field-key="' + fieldKey + '"] select, ' +
-                    '[data-field-key="' + fieldKey + '"] textarea';
-            }
-
-            // Top-level field
-            return '[name="' + fieldKey + '"], [name="' + fieldKey + '[]"]';
-        },
-
-        /**
-         * Evaluate and update field visibility based on conditions
-         *
-         * @param {jQuery} $field     The conditional field
-         * @param {Array}  conditions Array of conditions to evaluate
-         */
-        evaluateFieldVisibility: function($field, conditions) {
-            var self = this;
-            var $context = $field.closest('.arraypress-repeater__row, .arraypress-group, .arraypress-metabox');
             var allMet = true;
 
             // All conditions must be met (AND logic)
-            conditions.forEach(function(condition) {
-                if (!allMet) return;
-
-                var value = self.getFieldValue(condition.field, $context);
-                var met = self.evaluateCondition(value, condition.operator, condition.value);
+            for (var i = 0; i < conditions.length; i++) {
+                var condition = conditions[i];
+                var value = this.getFieldValue(condition.field, $context);
+                var met = this.evaluateCondition(value, condition.operator, condition.value);
 
                 if (!met) {
                     allMet = false;
+                    break;
                 }
-            });
+            }
 
             // Show or hide field
             if (allMet) {
@@ -496,18 +450,24 @@
          * @param {jQuery} $context The context element
          * @return {mixed} The field value
          */
-        getFieldValue: function(fieldKey, $context) {
-            var $input;
+        getFieldValue: function (fieldKey, $context) {
+            var $input = null;
 
-            // Try to find within context first
-            $input = $context.find('[data-field-key="' + fieldKey + '"]').find('input, select, textarea').first();
+            // First, try to find by data-field-key within context
+            var $fieldWrapper = $context.find('[data-field-key="' + fieldKey + '"]').first();
 
-            // Fall back to document-level search
-            if (!$input.length) {
+            if ($fieldWrapper.length) {
+                $input = $fieldWrapper.find('input, select, textarea').first();
+            }
+
+            // If not found and we're in a repeater row, don't fall back to document level
+            // This ensures row-scoped lookups stay within the row
+            if ((!$input || !$input.length) && !$context.hasClass('arraypress-repeater__row')) {
+                // Fall back to name-based search at document level
                 $input = $('[name="' + fieldKey + '"], [name="' + fieldKey + '[]"]').first();
             }
 
-            if (!$input.length) {
+            if (!$input || !$input.length) {
                 return '';
             }
 
@@ -517,7 +477,8 @@
             }
 
             if ($input.is(':radio')) {
-                return $context.find('[name="' + $input.attr('name') + '"]:checked').val() || '';
+                var radioName = $input.attr('name');
+                return $('input[name="' + radioName + '"]:checked').val() || '';
             }
 
             return $input.val();
@@ -531,7 +492,7 @@
          * @param {mixed}  expected    The expected value
          * @return {boolean} Whether the condition is met
          */
-        evaluateCondition: function(actualValue, operator, expected) {
+        evaluateCondition: function (actualValue, operator, expected) {
             // Normalize values for comparison
             var actual = this.normalizeValue(actualValue);
             var expect = this.normalizeValue(expected);
@@ -594,7 +555,7 @@
          * @param {mixed} value The value to normalize
          * @return {mixed} Normalized value
          */
-        normalizeValue: function(value) {
+        normalizeValue: function (value) {
             if (value === null || value === undefined) {
                 return '';
             }
@@ -611,7 +572,7 @@
     /**
      * Initialize on document ready
      */
-    $(document).ready(function() {
+    $(document).ready(function () {
         PostFields.init();
     });
 

@@ -176,13 +176,10 @@ trait RestSchema {
 	 * @return array Schema properties.
 	 */
 	protected function get_nested_schema_properties( array $fields ): array {
-		$properties = [];
 
-		foreach ( $fields as $key => $field ) {
-			$properties[ $key ] = $this->get_rest_schema( $field );
-		}
-
-		return $properties;
+		return array_map( function ( $field ) {
+			return $this->get_rest_schema( $field );
+		}, $fields );
 	}
 
 }

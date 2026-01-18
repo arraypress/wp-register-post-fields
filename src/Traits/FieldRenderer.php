@@ -770,7 +770,7 @@ trait FieldRenderer {
             $index = 0;
             foreach ( $value as $row_value ) :
                 $this->render_repeater_row( $meta_key, $field, $row_value, $index, $layout );
-                $index++;
+                $index ++;
             endforeach;
             ?>
         </div>
@@ -818,7 +818,7 @@ trait FieldRenderer {
             $index = 0;
             foreach ( $value as $row_value ) :
                 $this->render_repeater_table_row( $meta_key, $field, $row_value, $index );
-                $index++;
+                $index ++;
             endforeach;
             ?>
             </tbody>
@@ -839,7 +839,7 @@ trait FieldRenderer {
      * @return void
      */
     protected function render_repeater_row( string $meta_key, array $field, array $value, $index, string $layout = 'vertical' ): void {
-        $collapsed = $field['collapsed'] ?? false;
+        $collapsed     = $field['collapsed'] ?? false;
         $is_horizontal = $layout === 'horizontal';
         ?>
         <div class="arraypress-repeater__row<?php echo $collapsed ? ' is-collapsed' : ''; ?><?php echo $is_horizontal ? ' arraypress-repeater__row--horizontal' : ''; ?>"
@@ -857,8 +857,8 @@ trait FieldRenderer {
             <div class="arraypress-repeater__row-content">
                 <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
                     $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
-                    $sub_name  = $meta_key . '[' . $index . '][' . $sub_key . ']';
-                    $width     = isset( $sub_field['width'] ) ? 'style="width:' . esc_attr( $sub_field['width'] ) . '"' : '';
+                    $sub_name = $meta_key . '[' . $index . '][' . $sub_key . ']';
+                    $width = isset( $sub_field['width'] ) ? 'style="width:' . esc_attr( $sub_field['width'] ) . '"' : '';
 
                     // Get conditional attributes for nested field
                     $conditional_class = '';
@@ -906,7 +906,7 @@ trait FieldRenderer {
             </td>
             <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
                 $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
-                $sub_name  = $meta_key . '[' . $index . '][' . $sub_key . ']';
+                $sub_name = $meta_key . '[' . $index . '][' . $sub_key . ']';
 
                 // Get conditional attributes for nested field
                 $conditional_class = '';
@@ -1020,7 +1020,7 @@ trait FieldRenderer {
 
             case 'radio':
                 $options = $this->get_options( $field['options'] );
-                $layout  = $field['layout'] ?? 'vertical';
+                $layout      = $field['layout'] ?? 'vertical';
                 ?>
                 <div class="arraypress-radio-group arraypress-radio-group--<?php echo esc_attr( $layout ); ?>">
                     <?php foreach ( $options as $option_value => $option_label ) : ?>
@@ -1037,11 +1037,11 @@ trait FieldRenderer {
                 break;
 
             case 'button_group':
-                $options  = $this->get_options( $field['options'] );
-                $multiple = ! empty( $field['multiple'] );
-                $name_attr = $multiple ? $name . '[]' : $name;
-                $values   = $multiple ? (array) $value : [ $value ];
-                $type     = $multiple ? 'checkbox' : 'radio';
+                $options = $this->get_options( $field['options'] );
+                $multiple    = ! empty( $field['multiple'] );
+                $name_attr   = $multiple ? $name . '[]' : $name;
+                $values      = $multiple ? (array) $value : [ $value ];
+                $type        = $multiple ? 'checkbox' : 'radio';
                 ?>
                 <div class="arraypress-button-group<?php echo $multiple ? ' arraypress-button-group--multiple' : ''; ?>">
                     <?php foreach ( $options as $option_value => $option_label ) :
@@ -1052,7 +1052,7 @@ trait FieldRenderer {
                                    name="<?php echo esc_attr( $name_attr ); ?>"
                                    value="<?php echo esc_attr( $option_value ); ?>"
                                     <?php checked( $is_selected ); ?>
-                                   class="arraypress-button-group__input" />
+                                   class="arraypress-button-group__input"/>
                             <span class="arraypress-button-group__label"><?php echo esc_html( $option_label ); ?></span>
                         </label>
                     <?php endforeach; ?>
@@ -1061,11 +1061,11 @@ trait FieldRenderer {
                 break;
 
             case 'range':
-                $min   = $field['min'] ?? 0;
-                $max   = $field['max'] ?? 100;
-                $step  = $field['step'] ?? 1;
+                $min = $field['min'] ?? 0;
+                $max         = $field['max'] ?? 100;
+                $step        = $field['step'] ?? 1;
                 $range_value = $value !== '' ? $value : ( $field['default'] ?? $min );
-                $unit  = $field['unit'] ?? '';
+                $unit        = $field['unit'] ?? '';
                 ?>
                 <div class="arraypress-range-field">
                     <input type="range"
@@ -1074,7 +1074,7 @@ trait FieldRenderer {
                            min="<?php echo esc_attr( $min ); ?>"
                            max="<?php echo esc_attr( $max ); ?>"
                            step="<?php echo esc_attr( $step ); ?>"
-                           class="arraypress-range-input" />
+                           class="arraypress-range-input"/>
                     <output class="arraypress-range-output">
                         <?php echo esc_html( $range_value . $unit ); ?>
                     </output>
@@ -1089,7 +1089,7 @@ trait FieldRenderer {
                        name="<?php echo esc_attr( $name ); ?>"
                        value="<?php echo esc_attr( $value ); ?>"
                        class="regular-text"
-                       placeholder="<?php echo esc_attr( $placeholder ); ?>" />
+                       placeholder="<?php echo esc_attr( $placeholder ); ?>"/>
                 <?php
                 break;
 
@@ -1212,7 +1212,7 @@ trait FieldRenderer {
                            name="<?php echo esc_attr( $name ); ?>"
                            value="<?php echo esc_attr( $option_value ); ?>"
                             <?php checked( $is_selected ); ?>
-                           class="arraypress-button-group__input" />
+                           class="arraypress-button-group__input"/>
                     <span class="arraypress-button-group__label"><?php echo esc_html( $option_label ); ?></span>
                 </label>
             <?php endforeach; ?>
@@ -1244,7 +1244,7 @@ trait FieldRenderer {
                    min="<?php echo esc_attr( $min ); ?>"
                    max="<?php echo esc_attr( $max ); ?>"
                    step="<?php echo esc_attr( $step ); ?>"
-                   class="arraypress-range-input" />
+                   class="arraypress-range-input"/>
             <output class="arraypress-range-output" for="<?php echo esc_attr( $meta_key ); ?>">
                 <?php echo esc_html( $value . $unit ); ?>
             </output>

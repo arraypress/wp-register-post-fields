@@ -41,6 +41,7 @@ trait FieldSanitizer {
 			case 'checkbox':
 				return $value ? 1 : 0;
 
+			case 'range':
 			case 'number':
 				return $this->sanitize_number( $value, $field );
 
@@ -83,15 +84,8 @@ trait FieldSanitizer {
 			case 'repeater':
 				return $this->sanitize_repeater( $value, $field );
 
-			case 'radio':
-			case 'tel':
-				return sanitize_text_field( $value );
-
 			case 'button_group':
 				return $this->sanitize_button_group( $value, $field );
-
-			case 'range':
-				return $this->sanitize_number( $value, $field );
 
 			case 'date':
 			case 'datetime':
@@ -311,6 +305,7 @@ trait FieldSanitizer {
 
 		if ( ! empty( $field['multiple'] ) ) {
 			$values = (array) $value;
+
 			return array_filter( $values, function ( $v ) use ( $options ) {
 				return array_key_exists( $v, $options );
 			} );

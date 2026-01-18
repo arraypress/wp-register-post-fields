@@ -258,6 +258,11 @@ trait FieldSanitizer {
 		$sanitized = [];
 
 		foreach ( $value as $index => $row ) {
+			// Skip the template row (it has __INDEX__ as key)
+			if ( $index === '__INDEX__' || ! is_numeric( $index ) ) {
+				continue;
+			}
+
 			if ( ! is_array( $row ) ) {
 				continue;
 			}
@@ -297,13 +302,7 @@ trait FieldSanitizer {
 	protected function row_has_content( array $row, array $fields ): bool {
 		foreach ( $row as $key => $value ) {
 			$field_config = $fields[ $key ] ?? [];
-			$default      = $field_config['default'] ?? '';
 			$type         = $field_config['type'] ?? 'text';
-
-			// Skip if value matches the default
-			if ( $value === $default ) {
-				continue;
-			}
 
 			// Check based on field type
 			switch ( $type ) {
@@ -315,22 +314,23 @@ trait FieldSanitizer {
 					break;
 
 				case 'number':
-					// Non-zero numbers are content (but be careful with 0 as valid)
+					// Non-empty number is content (0 can be valid)
 					if ( $value !== '' && $value !== null ) {
 						return true;
 					}
 					break;
 
 				case 'select':
-					// Non-empty select value that's not the default empty option
-					if ( $value !== '' && $value !== null ) {
+				case 'ajax':
+					// Non-empty select/ajax value
+					if ( $value !== '' && $value !== null && ! empty( $value ) ) {
 						return true;
 					}
 					break;
 
 				case 'image':
 				case 'file':
-					// Valid attachment ID is content
+					// Valid attachment ID > 0 is content
 					if ( ! empty( $value ) && $value > 0 ) {
 						return true;
 					}
@@ -345,7 +345,11 @@ trait FieldSanitizer {
 
 				default:
 					// For text, textarea, url, email, etc. - non-empty string is content
-					if ( $value !== '' && $value !== null ) {
+					if ( $value !== '' && $value !== null && ! is_array( $value ) ) {
+						return true;
+					}
+					// For arrays (like product_features), check if not empty
+					if ( is_array( $value ) && ! empty( $value ) ) {
 						return true;
 					}
 					break;

@@ -35,30 +35,27 @@ class RestApi {
 	private string $namespace = 'arraypress-post-fields/v1';
 
 	/**
-	 * Singleton instance.
+	 * Whether routes have been registered.
 	 *
-	 * @var RestApi|null
+	 * @var bool
 	 */
-	private static ?RestApi $instance = null;
+	private static bool $routes_registered = false;
 
 	/**
-	 * Get singleton instance.
+	 * Register the REST API routes.
 	 *
-	 * @return RestApi
+	 * Call this early (e.g., on 'init' or when registering fields).
+	 *
+	 * @return void
 	 */
-	public static function instance(): RestApi {
-		if ( self::$instance === null ) {
-			self::$instance = new self();
+	public static function register(): void {
+		if ( self::$routes_registered ) {
+			return;
 		}
 
-		return self::$instance;
-	}
+		self::$routes_registered = true;
 
-	/**
-	 * Constructor.
-	 */
-	private function __construct() {
-		add_action( 'rest_api_init', [ $this, 'register_routes' ] );
+		add_action( 'rest_api_init', [ __CLASS__, 'register_routes' ] );
 	}
 
 	/**
@@ -66,11 +63,13 @@ class RestApi {
 	 *
 	 * @return void
 	 */
-	public function register_routes(): void {
-		register_rest_route( $this->namespace, '/ajax', [
+	public static function register_routes(): void {
+		$instance = new self();
+
+		register_rest_route( $instance->namespace, '/ajax', [
 			'methods'             => 'GET',
-			'callback'            => [ $this, 'handle_request' ],
-			'permission_callback' => [ $this, 'permission_check' ],
+			'callback'            => [ $instance, 'handle_request' ],
+			'permission_callback' => [ $instance, 'permission_check' ],
 			'args'                => [
 				'metabox_id' => [
 					'required'          => true,

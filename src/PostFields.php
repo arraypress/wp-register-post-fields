@@ -124,6 +124,10 @@ class PostFields {
 
 		self::$metaboxes[ $this->id ] = $this->config;
 
+		if ( $this->has_field_type( 'ajax' ) ) {
+			RestApi::register();
+		}
+
 		// Load hooks immediately if already past init, otherwise wait
 		if ( did_action( 'init' ) ) {
 			$this->register_meta();
@@ -360,13 +364,10 @@ class PostFields {
 			'arraypress-post-fields',
 			__FILE__,
 			'js/post-fields.js',
-			[ 'jquery', 'jquery-ui-sortable', 'wp-color-picker', 'arraypress-select2' ]
+			[ 'jquery', 'jquery-ui-sortable', 'wp-color-picker', 'arraypress-select2' ],
+			false,
+			true
 		);
-
-		// Initialize REST API if we have ajax fields
-		if ( $this->has_field_type( 'ajax' ) ) {
-			RestApi::instance();
-		}
 
 		// Localize script with configuration data
 		wp_localize_script( 'arraypress-post-fields', 'arraypressPostFields', [
@@ -392,7 +393,9 @@ class PostFields {
 			'arraypress-select2',
 			__FILE__,
 			'js/select2.min.js',
-			[ 'jquery' ]
+			[ 'jquery' ],
+			false,
+			true
 		);
 	}
 

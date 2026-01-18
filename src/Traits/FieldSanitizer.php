@@ -72,8 +72,10 @@ trait FieldSanitizer {
 			case 'post':
 			case 'user':
 			case 'term':
-			case 'ajax':
 				return $this->sanitize_relational( $value, $field );
+
+			case 'ajax':
+				return $this->sanitize_ajax( $value, $field );
 
 			case 'group':
 				return $this->sanitize_group( $value, $field );
@@ -170,6 +172,26 @@ trait FieldSanitizer {
 		}
 
 		return absint( $value );
+	}
+
+	/**
+	 * Sanitize an ajax field value.
+	 *
+	 * Ajax fields can have string or integer values depending on the callback.
+	 *
+	 * @param mixed $value The value to sanitize.
+	 * @param array $field The field configuration.
+	 *
+	 * @return string|array Sanitized value(s).
+	 */
+	protected function sanitize_ajax( $value, array $field ) {
+		if ( $field['multiple'] ) {
+			$values = (array) $value;
+
+			return array_map( 'sanitize_text_field', array_filter( $values ) );
+		}
+
+		return sanitize_text_field( $value );
 	}
 
 	/**

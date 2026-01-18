@@ -96,6 +96,10 @@ class PostFields {
 		'group'       => null,
 		'repeater'    => null,
 		'ajax'        => null,
+		'radio'        => 'sanitize_text_field',
+		'button_group' => 'sanitize_text_field',
+		'range'        => null,
+		'tel'          => 'sanitize_text_field',
 	];
 
 	/**

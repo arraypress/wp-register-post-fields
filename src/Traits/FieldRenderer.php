@@ -144,6 +144,22 @@ trait FieldRenderer {
                 $this->render_ajax_select( $meta_key, $field, $value );
                 break;
 
+            case 'radio':
+                $this->render_radio( $meta_key, $field, $value );
+                break;
+
+            case 'button_group':
+                $this->render_button_group( $meta_key, $field, $value );
+                break;
+
+            case 'range':
+                $this->render_range( $meta_key, $field, $value );
+                break;
+
+            case 'tel':
+                $this->render_tel( $meta_key, $field, $value );
+                break;
+
             case 'url':
             case 'email':
             case 'text':
@@ -712,25 +728,21 @@ trait FieldRenderer {
         $button_label = $field['button_label'] ?: __( 'Add Row', 'arraypress' );
         $max          = $field['max_items'] ?: 0;
         $min          = $field['min_items'] ?: 0;
+        $layout       = $field['layout'] ?? 'vertical'; // vertical, horizontal, table
+
+        $layout_class = 'arraypress-repeater--' . $layout;
         ?>
-        <div class="arraypress-repeater"
+        <div class="arraypress-repeater <?php echo esc_attr( $layout_class ); ?>"
              data-meta-key="<?php echo esc_attr( $meta_key ); ?>"
              data-max="<?php echo esc_attr( $max ); ?>"
-             data-min="<?php echo esc_attr( $min ); ?>">
+             data-min="<?php echo esc_attr( $min ); ?>"
+             data-layout="<?php echo esc_attr( $layout ); ?>">
 
-            <div class="arraypress-repeater__rows">
-                <?php
-                $index = 0;
-                foreach ( $value as $row_value ) :
-                    $this->render_repeater_row( $meta_key, $field, $row_value, $index );
-                    $index ++;
-                endforeach;
-                ?>
-            </div>
-
-            <div class="arraypress-repeater__template" style="display:none;">
-                <?php $this->render_repeater_row( $meta_key, $field, [], '__INDEX__' ); ?>
-            </div>
+            <?php if ( $layout === 'table' ) : ?>
+                <?php $this->render_repeater_table( $meta_key, $field, $value, $post_id ); ?>
+            <?php else : ?>
+                <?php $this->render_repeater_standard( $meta_key, $field, $value, $post_id, $layout ); ?>
+            <?php endif; ?>
 
             <button type="button" class="button arraypress-repeater__add">
                 <?php echo esc_html( $button_label ); ?>
@@ -740,32 +752,112 @@ trait FieldRenderer {
     }
 
     /**
-     * Render a single repeater row.
+     * Render standard repeater layout (vertical or horizontal).
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param array  $value    The current field values.
+     * @param int    $post_id  The post ID.
+     * @param string $layout   The layout type.
+     *
+     * @return void
+     */
+    protected function render_repeater_standard( string $meta_key, array $field, array $value, int $post_id, string $layout ): void {
+        $collapsed = $field['collapsed'] ?? false;
+        ?>
+        <div class="arraypress-repeater__rows">
+            <?php
+            $index = 0;
+            foreach ( $value as $row_value ) :
+                $this->render_repeater_row( $meta_key, $field, $row_value, $index, $layout );
+                $index++;
+            endforeach;
+            ?>
+        </div>
+
+        <div class="arraypress-repeater__template" style="display:none;">
+            <?php $this->render_repeater_row( $meta_key, $field, [], '__INDEX__', $layout ); ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render table layout repeater.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param array  $value    The current field values.
+     * @param int    $post_id  The post ID.
+     *
+     * @return void
+     */
+    protected function render_repeater_table( string $meta_key, array $field, array $value, int $post_id ): void {
+        ?>
+        <table class="arraypress-repeater__table widefat">
+            <thead>
+            <tr>
+                <th class="arraypress-repeater__table-handle"></th>
+                <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
+                    $width = isset( $sub_field['width'] ) ? 'style="width:' . esc_attr( $sub_field['width'] ) . '"' : '';
+                    ?>
+                    <th <?php echo $width; ?>><?php echo esc_html( $sub_field['label'] ); ?></th>
+                <?php endforeach; ?>
+                <th class="arraypress-repeater__table-actions"></th>
+            </tr>
+            </thead>
+            <tbody class="arraypress-repeater__rows">
+            <?php
+            $index = 0;
+            foreach ( $value as $row_value ) :
+                $this->render_repeater_table_row( $meta_key, $field, $row_value, $index );
+                $index++;
+            endforeach;
+            ?>
+            </tbody>
+        </table>
+
+        <div class="arraypress-repeater__template" style="display:none;">
+            <table>
+                <tbody>
+                <?php $this->render_repeater_table_row( $meta_key, $field, [], '__INDEX__' ); ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render a single repeater row (vertical or horizontal layout).
      *
      * @param string     $meta_key The field's meta key.
      * @param array      $field    The field configuration.
      * @param array      $value    The row values.
      * @param int|string $index    The row index.
+     * @param string     $layout   The layout type.
      *
      * @return void
      */
-    protected function render_repeater_row( string $meta_key, array $field, array $value, $index ): void {
-        $collapsed = $field['collapsed'];
+    protected function render_repeater_row( string $meta_key, array $field, array $value, $index, string $layout = 'vertical' ): void {
+        $collapsed = $field['collapsed'] ?? false;
+        $is_horizontal = $layout === 'horizontal';
         ?>
-        <div class="arraypress-repeater__row<?php echo $collapsed ? ' is-collapsed' : ''; ?>"
+        <div class="arraypress-repeater__row<?php echo $collapsed ? ' is-collapsed' : ''; ?><?php echo $is_horizontal ? ' arraypress-repeater__row--horizontal' : ''; ?>"
              data-index="<?php echo esc_attr( $index ); ?>">
             <div class="arraypress-repeater__row-header">
                 <span class="arraypress-repeater__row-handle">☰</span>
                 <span class="arraypress-repeater__row-title">
-					<?php printf( __( 'Item %s', 'arraypress' ), is_numeric( $index ) ? $index + 1 : '#' ); ?>
-				</span>
-                <button type="button" class="arraypress-repeater__row-toggle">▼</button>
+                <?php printf( __( 'Item %s', 'arraypress' ), is_numeric( $index ) ? $index + 1 : '#' ); ?>
+            </span>
+                <?php if ( ! $is_horizontal ) : ?>
+                    <button type="button" class="arraypress-repeater__row-toggle">▼</button>
+                <?php endif; ?>
                 <button type="button" class="arraypress-repeater__row-remove">&times;</button>
             </div>
             <div class="arraypress-repeater__row-content">
                 <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
                     $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
-                    $sub_name = $meta_key . '[' . $index . '][' . $sub_key . ']';
+                    $sub_name  = $meta_key . '[' . $index . '][' . $sub_key . ']';
+                    $width     = isset( $sub_field['width'] ) ? 'style="width:' . esc_attr( $sub_field['width'] ) . '"' : '';
 
                     // Get conditional attributes for nested field
                     $conditional_class = '';
@@ -776,18 +868,63 @@ trait FieldRenderer {
                     }
                     ?>
                     <div class="arraypress-repeater__field<?php echo $conditional_class; ?>"
-                         data-field-key="<?php echo esc_attr( $sub_key ); ?>"<?php echo $data_attrs; ?>>
-                        <label class="arraypress-repeater__field-label">
-                            <?php echo esc_html( $sub_field['label'] ); ?>
-                        </label>
+                         data-field-key="<?php echo esc_attr( $sub_key ); ?>"
+                            <?php echo $width; ?>
+                            <?php echo $data_attrs; ?>>
+                        <?php if ( ! $is_horizontal ) : ?>
+                            <label class="arraypress-repeater__field-label">
+                                <?php echo esc_html( $sub_field['label'] ); ?>
+                            </label>
+                        <?php endif; ?>
                         <?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
-                        <?php if ( ! empty( $sub_field['description'] ) ) : ?>
+                        <?php if ( ! empty( $sub_field['description'] ) && ! $is_horizontal ) : ?>
                             <p class="arraypress-field__description"><?php echo esc_html( $sub_field['description'] ); ?></p>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
         </div>
+        <?php
+    }
+
+    /**
+     * Render a single table row for repeater.
+     *
+     * @param string     $meta_key The field's meta key.
+     * @param array      $field    The field configuration.
+     * @param array      $value    The row values.
+     * @param int|string $index    The row index.
+     *
+     * @return void
+     */
+    protected function render_repeater_table_row( string $meta_key, array $field, array $value, $index ): void {
+        ?>
+        <tr class="arraypress-repeater__row" data-index="<?php echo esc_attr( $index ); ?>">
+            <td class="arraypress-repeater__table-handle">
+                <span class="arraypress-repeater__row-handle">☰</span>
+            </td>
+            <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
+                $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
+                $sub_name  = $meta_key . '[' . $index . '][' . $sub_key . ']';
+
+                // Get conditional attributes for nested field
+                $conditional_class = '';
+                $data_attrs        = '';
+                if ( ! empty( $sub_field['show_when'] ) ) {
+                    $conditional_class = ' arraypress-conditional-field';
+                    $data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
+                }
+                ?>
+                <td class="arraypress-repeater__field<?php echo $conditional_class; ?>"
+                    data-field-key="<?php echo esc_attr( $sub_key ); ?>"
+                        <?php echo $data_attrs; ?>>
+                    <?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
+                </td>
+            <?php endforeach; ?>
+            <td class="arraypress-repeater__table-actions">
+                <button type="button" class="arraypress-repeater__row-remove">&times;</button>
+            </td>
+        </tr>
         <?php
     }
 
@@ -880,6 +1017,81 @@ trait FieldRenderer {
                 <?php
                 break;
 
+            case 'radio':
+                $options = $this->get_options( $field['options'] );
+                $layout  = $field['layout'] ?? 'vertical';
+                ?>
+                <div class="arraypress-radio-group arraypress-radio-group--<?php echo esc_attr( $layout ); ?>">
+                    <?php foreach ( $options as $option_value => $option_label ) : ?>
+                        <label class="arraypress-radio-item">
+                            <input type="radio"
+                                   name="<?php echo esc_attr( $name ); ?>"
+                                   value="<?php echo esc_attr( $option_value ); ?>"
+                                    <?php checked( $value, $option_value ); ?> />
+                            <span class="arraypress-radio-label"><?php echo esc_html( $option_label ); ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <?php
+                break;
+
+            case 'button_group':
+                $options  = $this->get_options( $field['options'] );
+                $multiple = ! empty( $field['multiple'] );
+                $name_attr = $multiple ? $name . '[]' : $name;
+                $values   = $multiple ? (array) $value : [ $value ];
+                $type     = $multiple ? 'checkbox' : 'radio';
+                ?>
+                <div class="arraypress-button-group<?php echo $multiple ? ' arraypress-button-group--multiple' : ''; ?>">
+                    <?php foreach ( $options as $option_value => $option_label ) :
+                        $is_selected = in_array( $option_value, $values, false );
+                        ?>
+                        <label class="arraypress-button-group__item<?php echo $is_selected ? ' is-selected' : ''; ?>">
+                            <input type="<?php echo esc_attr( $type ); ?>"
+                                   name="<?php echo esc_attr( $name_attr ); ?>"
+                                   value="<?php echo esc_attr( $option_value ); ?>"
+                                    <?php checked( $is_selected ); ?>
+                                   class="arraypress-button-group__input" />
+                            <span class="arraypress-button-group__label"><?php echo esc_html( $option_label ); ?></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <?php
+                break;
+
+            case 'range':
+                $min   = $field['min'] ?? 0;
+                $max   = $field['max'] ?? 100;
+                $step  = $field['step'] ?? 1;
+                $range_value = $value !== '' ? $value : ( $field['default'] ?? $min );
+                $unit  = $field['unit'] ?? '';
+                ?>
+                <div class="arraypress-range-field">
+                    <input type="range"
+                           name="<?php echo esc_attr( $name ); ?>"
+                           value="<?php echo esc_attr( $range_value ); ?>"
+                           min="<?php echo esc_attr( $min ); ?>"
+                           max="<?php echo esc_attr( $max ); ?>"
+                           step="<?php echo esc_attr( $step ); ?>"
+                           class="arraypress-range-input" />
+                    <output class="arraypress-range-output">
+                        <?php echo esc_html( $range_value . $unit ); ?>
+                    </output>
+                </div>
+                <?php
+                break;
+
+            case 'tel':
+                $placeholder = $field['placeholder'] ?? '';
+                ?>
+                <input type="tel"
+                       name="<?php echo esc_attr( $name ); ?>"
+                       value="<?php echo esc_attr( $value ); ?>"
+                       class="regular-text"
+                       placeholder="<?php echo esc_attr( $placeholder ); ?>" />
+                <?php
+                break;
+
             case 'file':
                 $file_url = $value ? wp_get_attachment_url( $value ) : '';
                 $file_name   = $value ? basename( get_attached_file( $value ) ) : '';
@@ -945,6 +1157,121 @@ trait FieldRenderer {
                 <?php
                 break;
         }
+    }
+
+    /**
+     * Render a radio button group field.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param mixed  $value    The current field value.
+     *
+     * @return void
+     */
+    protected function render_radio( string $meta_key, array $field, $value ): void {
+        $options = $this->get_options( $field['options'] );
+        $layout  = $field['layout'] ?? 'vertical'; // vertical or horizontal
+        ?>
+        <div class="arraypress-radio-group arraypress-radio-group--<?php echo esc_attr( $layout ); ?>">
+            <?php foreach ( $options as $option_value => $option_label ) : ?>
+                <label class="arraypress-radio-item">
+                    <input type="radio"
+                           name="<?php echo esc_attr( $meta_key ); ?>"
+                           value="<?php echo esc_attr( $option_value ); ?>"
+                            <?php checked( $value, $option_value ); ?> />
+                    <span class="arraypress-radio-label"><?php echo esc_html( $option_label ); ?></span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render a button group field (toggle buttons).
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param mixed  $value    The current field value.
+     *
+     * @return void
+     */
+    protected function render_button_group( string $meta_key, array $field, $value ): void {
+        $options  = $this->get_options( $field['options'] );
+        $multiple = ! empty( $field['multiple'] );
+        $name     = $multiple ? $meta_key . '[]' : $meta_key;
+        $values   = $multiple ? (array) $value : [ $value ];
+        $type     = $multiple ? 'checkbox' : 'radio';
+        ?>
+        <div class="arraypress-button-group<?php echo $multiple ? ' arraypress-button-group--multiple' : ''; ?>">
+            <?php foreach ( $options as $option_value => $option_label ) :
+                $is_selected = in_array( $option_value, $values, false );
+                ?>
+                <label class="arraypress-button-group__item<?php echo $is_selected ? ' is-selected' : ''; ?>">
+                    <input type="<?php echo esc_attr( $type ); ?>"
+                           name="<?php echo esc_attr( $name ); ?>"
+                           value="<?php echo esc_attr( $option_value ); ?>"
+                            <?php checked( $is_selected ); ?>
+                           class="arraypress-button-group__input" />
+                    <span class="arraypress-button-group__label"><?php echo esc_html( $option_label ); ?></span>
+                </label>
+            <?php endforeach; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render a range slider field.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param mixed  $value    The current field value.
+     *
+     * @return void
+     */
+    protected function render_range( string $meta_key, array $field, $value ): void {
+        $min   = $field['min'] ?? 0;
+        $max   = $field['max'] ?? 100;
+        $step  = $field['step'] ?? 1;
+        $value = $value !== '' ? $value : ( $field['default'] ?? $min );
+        $unit  = $field['unit'] ?? '';
+        ?>
+        <div class="arraypress-range-field">
+            <input type="range"
+                   id="<?php echo esc_attr( $meta_key ); ?>"
+                   name="<?php echo esc_attr( $meta_key ); ?>"
+                   value="<?php echo esc_attr( $value ); ?>"
+                   min="<?php echo esc_attr( $min ); ?>"
+                   max="<?php echo esc_attr( $max ); ?>"
+                   step="<?php echo esc_attr( $step ); ?>"
+                   class="arraypress-range-input" />
+            <output class="arraypress-range-output" for="<?php echo esc_attr( $meta_key ); ?>">
+                <?php echo esc_html( $value . $unit ); ?>
+            </output>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render a telephone input field.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration.
+     * @param mixed  $value    The current field value.
+     *
+     * @return void
+     */
+    protected function render_tel( string $meta_key, array $field, $value ): void {
+        $placeholder = $field['placeholder'] ?? '';
+        $pattern     = $field['pattern'] ?? '';
+        ?>
+        <input type="tel"
+               id="<?php echo esc_attr( $meta_key ); ?>"
+               name="<?php echo esc_attr( $meta_key ); ?>"
+               value="<?php echo esc_attr( $value ); ?>"
+               class="regular-text"
+               placeholder="<?php echo esc_attr( $placeholder ); ?>"
+                <?php echo $pattern ? 'pattern="' . esc_attr( $pattern ) . '"' : ''; ?> />
+        <?php
     }
 
 }

@@ -83,6 +83,16 @@ trait FieldSanitizer {
 			case 'repeater':
 				return $this->sanitize_repeater( $value, $field );
 
+			case 'radio':
+			case 'tel':
+				return sanitize_text_field( $value );
+
+			case 'button_group':
+				return $this->sanitize_button_group( $value, $field );
+
+			case 'range':
+				return $this->sanitize_number( $value, $field );
+
 			case 'date':
 			case 'datetime':
 			case 'time':
@@ -286,6 +296,27 @@ trait FieldSanitizer {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Sanitize a button group value.
+	 *
+	 * @param mixed $value The value to sanitize.
+	 * @param array $field The field configuration.
+	 *
+	 * @return string|array Sanitized value(s).
+	 */
+	protected function sanitize_button_group( $value, array $field ) {
+		$options = $this->get_options( $field['options'] );
+
+		if ( ! empty( $field['multiple'] ) ) {
+			$values = (array) $value;
+			return array_filter( $values, function ( $v ) use ( $options ) {
+				return array_key_exists( $v, $options );
+			} );
+		}
+
+		return array_key_exists( $value, $options ) ? $value : ( $field['default'] ?? '' );
 	}
 
 	/**

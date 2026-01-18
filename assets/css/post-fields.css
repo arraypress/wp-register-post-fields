@@ -323,3 +323,289 @@
         height: 80px;
     }
 }
+
+/* ==========================================================================
+   RADIO BUTTONS
+   ========================================================================== */
+
+.arraypress-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.arraypress-radio-group--horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.arraypress-radio-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.arraypress-radio-item input[type="radio"] {
+    margin: 0;
+}
+
+.arraypress-radio-label {
+    font-weight: normal;
+}
+
+/* ==========================================================================
+   BUTTON GROUP
+   ========================================================================== */
+
+.arraypress-button-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.arraypress-button-group__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    background: #f6f7f7;
+    border-right: 1px solid #8c8f94;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin: 0;
+}
+
+.arraypress-button-group__item:last-child {
+    border-right: none;
+}
+
+.arraypress-button-group__item:hover {
+    background: #f0f0f1;
+}
+
+.arraypress-button-group__item.is-selected {
+    background: #2271b1;
+    color: #fff;
+}
+
+.arraypress-button-group__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.arraypress-button-group__label {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Multiple selection variant */
+.arraypress-button-group--multiple .arraypress-button-group__item.is-selected {
+    background: #135e96;
+}
+
+/* ==========================================================================
+   RANGE SLIDER
+   ========================================================================== */
+
+.arraypress-range-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 400px;
+}
+
+.arraypress-range-input {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #dcdcde;
+    border-radius: 3px;
+    outline: none;
+}
+
+.arraypress-range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: #2271b1;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.arraypress-range-input::-webkit-slider-thumb:hover {
+    background: #135e96;
+}
+
+.arraypress-range-input::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #2271b1;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.arraypress-range-output {
+    min-width: 50px;
+    padding: 4px 8px;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   REPEATER - HORIZONTAL LAYOUT
+   ========================================================================== */
+
+.arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__row-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__field {
+    flex: 1;
+    min-width: 120px;
+}
+
+.arraypress-repeater--horizontal .arraypress-repeater__row-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f6f7f7;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.arraypress-repeater--horizontal .arraypress-repeater__row-title {
+    flex: 1;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   REPEATER - TABLE LAYOUT
+   ========================================================================== */
+
+.arraypress-repeater--table .arraypress-repeater__table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+}
+
+.arraypress-repeater--table .arraypress-repeater__table thead th {
+    text-align: left;
+    padding: 10px 8px;
+    font-weight: 600;
+    background: #f6f7f7;
+    border-bottom: 1px solid #c3c4c7;
+    font-size: 13px;
+}
+
+.arraypress-repeater--table .arraypress-repeater__table-handle {
+    width: 30px;
+    text-align: center;
+}
+
+.arraypress-repeater--table .arraypress-repeater__table-actions {
+    width: 40px;
+    text-align: center;
+}
+
+.arraypress-repeater--table .arraypress-repeater__table tbody tr {
+    border-bottom: 1px solid #dcdcde;
+}
+
+.arraypress-repeater--table .arraypress-repeater__table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.arraypress-repeater--table .arraypress-repeater__table tbody td {
+    padding: 8px;
+    vertical-align: middle;
+}
+
+.arraypress-repeater--table .arraypress-repeater__row-handle {
+    cursor: move;
+    color: #8c8f94;
+}
+
+.arraypress-repeater--table .arraypress-repeater__row-remove {
+    background: none;
+    border: none;
+    color: #b32d2e;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+}
+
+.arraypress-repeater--table .arraypress-repeater__row-remove:hover {
+    color: #a00;
+}
+
+/* Table inputs full width */
+.arraypress-repeater--table .arraypress-repeater__field input[type="text"],
+.arraypress-repeater--table .arraypress-repeater__field input[type="url"],
+.arraypress-repeater--table .arraypress-repeater__field input[type="email"],
+.arraypress-repeater--table .arraypress-repeater__field input[type="tel"],
+.arraypress-repeater--table .arraypress-repeater__field input[type="number"],
+.arraypress-repeater--table .arraypress-repeater__field select,
+.arraypress-repeater--table .arraypress-repeater__field textarea {
+    width: 100%;
+}
+
+/* Sortable placeholder for table */
+.arraypress-repeater--table .ui-sortable-placeholder {
+    height: 50px;
+    background: #f0f6fc;
+    border: 2px dashed #2271b1;
+    visibility: visible !important;
+}
+
+/* ==========================================================================
+   SELECT2 ADJUSTMENTS
+   ========================================================================== */
+
+.arraypress-repeater--table .select2-container {
+    width: 100% !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .arraypress-button-group {
+        flex-wrap: wrap;
+    }
+
+    .arraypress-button-group__item {
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__row-content {
+        flex-direction: column;
+    }
+
+    .arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__field {
+        width: 100%;
+    }
+
+    .arraypress-repeater--table .arraypress-repeater__table {
+        display: block;
+        overflow-x: auto;
+    }
+}

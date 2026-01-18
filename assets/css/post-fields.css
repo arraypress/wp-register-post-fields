@@ -2,23 +2,54 @@
  * Post Fields Styles
  *
  * Styles for the WordPress Register Post Fields library.
+ * Provides styling for all field types including conditional fields,
+ * media fields, galleries, groups, repeaters, and form controls.
  *
- * @package ArrayPress\RegisterPostFields
- * @version 2.0.0
+ * @package     ArrayPress\RegisterPostFields
+ * @copyright   Copyright (c) 2026, ArrayPress Limited
+ * @license     GPL2+
+ * @version     2.0.0
+ * @author      David Sherlock
+ *
+ * Table of Contents:
+ * 1. Base Metabox
+ * 2. Field Wrapper
+ * 3. Conditional Fields
+ * 4. Amount Type Field
+ * 5. Media Fields (Image & File)
+ * 6. Gallery Field
+ * 7. Checkbox Group
+ * 8. Radio Buttons
+ * 9. Button Group
+ * 10. Range Slider
+ * 11. Group Field
+ * 12. Repeater Field - Base
+ * 13. Repeater Field - Horizontal Layout
+ * 14. Repeater Field - Table Layout
+ * 15. Select2 Adjustments
+ * 16. Responsive Adjustments
  */
 
 /* ==========================================================================
-   Base Metabox
+   1. Base Metabox
    ========================================================================== */
 
+/**
+ * Main metabox container
+ * Negative margins compensate for WordPress default metabox padding
+ */
 .arraypress-metabox {
     margin: -6px -12px -12px;
 }
 
 /* ==========================================================================
-   Field Wrapper
+   2. Field Wrapper
    ========================================================================== */
 
+/**
+ * Individual field container
+ * Provides consistent spacing and visual separation between fields
+ */
 .arraypress-field {
     padding: 12px;
     border-bottom: 1px solid #f0f0f0;
@@ -28,12 +59,18 @@
     border-bottom: none;
 }
 
+/**
+ * Field label styling
+ */
 .arraypress-field__label {
     display: block;
     font-weight: 600;
     margin-bottom: 8px;
 }
 
+/**
+ * Field description/help text
+ */
 .arraypress-field__description {
     margin: 8px 0 0;
     color: #646970;
@@ -41,26 +78,42 @@
 }
 
 /* ==========================================================================
-   Conditional Fields
+   3. Conditional Fields
    ========================================================================== */
 
+/**
+ * Conditional field visibility
+ * Smooth transitions for show/hide animations
+ */
 .arraypress-conditional-field {
     transition: opacity 0.2s ease, max-height 0.3s ease;
 }
 
+/**
+ * Hidden state for conditional fields
+ * Uses !important to ensure hiding overrides other display rules
+ */
 .arraypress-field--hidden {
     display: none !important;
 }
 
 /* ==========================================================================
-   Amount Type Field
+   4. Amount Type Field
    ========================================================================== */
 
+/**
+ * Combined amount + type selector field
+ * Creates a unified input with number field and type dropdown
+ */
 .arraypress-amount-type {
     display: inline-flex;
     align-items: stretch;
 }
 
+/**
+ * Number input styling
+ * Removes right border radius to connect with select dropdown
+ */
 .arraypress-amount-type input[type="number"] {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -68,15 +121,23 @@
     border-right: 0;
 }
 
+/**
+ * Type selector dropdown
+ * Removes left border radius to connect with number input
+ */
 .arraypress-amount-type select {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
 
 /* ==========================================================================
-   Media Fields (Image & File)
+   5. Media Fields (Image & File)
    ========================================================================== */
 
+/**
+ * Media field container
+ * Flexbox layout for preview, select, and remove buttons
+ */
 .arraypress-media-field {
     display: flex;
     align-items: center;
@@ -84,12 +145,18 @@
     flex-wrap: wrap;
 }
 
+/**
+ * Image preview thumbnail
+ */
 .arraypress-media-preview img {
     max-width: 150px;
     max-height: 150px;
     border-radius: 4px;
 }
 
+/**
+ * File preview link styling
+ */
 .arraypress-file-preview a {
     display: inline-flex;
     align-items: center;
@@ -107,9 +174,13 @@
 }
 
 /* ==========================================================================
-   Gallery Field
+   6. Gallery Field
    ========================================================================== */
 
+/**
+ * Gallery preview container
+ * Flexbox grid for image thumbnails
+ */
 .arraypress-gallery-preview {
     display: flex;
     flex-wrap: wrap;
@@ -117,11 +188,17 @@
     margin-bottom: 10px;
 }
 
+/**
+ * Individual gallery item container
+ */
 .arraypress-gallery-item {
     position: relative;
     display: inline-block;
 }
 
+/**
+ * Gallery thumbnail image
+ */
 .arraypress-gallery-item img {
     width: 100px;
     height: 100px;
@@ -129,6 +206,10 @@
     border-radius: 4px;
 }
 
+/**
+ * Gallery item remove button
+ * Positioned in top-right corner of thumbnail
+ */
 .arraypress-gallery-remove {
     position: absolute;
     top: -8px;
@@ -153,9 +234,13 @@
 }
 
 /* ==========================================================================
-   Checkbox Group
+   7. Checkbox Group
    ========================================================================== */
 
+/**
+ * Checkbox group container
+ * Scrollable container for multiple checkbox options
+ */
 .arraypress-checkbox-group {
     max-height: 200px;
     overflow-y: auto;
@@ -165,6 +250,9 @@
     background: #fff;
 }
 
+/**
+ * Individual checkbox item
+ */
 .arraypress-checkbox-item {
     display: block;
     margin-bottom: 5px;
@@ -175,172 +263,31 @@
 }
 
 /* ==========================================================================
-   Group Field
+   8. Radio Buttons
    ========================================================================== */
 
-.arraypress-group {
-    background: #f9f9f9;
-    padding: 12px;
-    border-radius: 4px;
-    border: 1px solid #dcdcde;
-}
-
-.arraypress-group__field {
-    margin-bottom: 12px;
-}
-
-.arraypress-group__field:last-child {
-    margin-bottom: 0;
-}
-
-.arraypress-group__label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 5px;
-}
-
-/* ==========================================================================
-   Repeater Field
-   ========================================================================== */
-
-.arraypress-repeater__rows {
-    margin-bottom: 10px;
-}
-
-.arraypress-repeater__row {
-    background: #f9f9f9;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    margin-bottom: 10px;
-}
-
-.arraypress-repeater__row:last-child {
-    margin-bottom: 0;
-}
-
-.arraypress-repeater__row-header {
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    background: #fff;
-    border-bottom: 1px solid #dcdcde;
-    border-radius: 4px 4px 0 0;
-    cursor: move;
-}
-
-.arraypress-repeater__row.is-collapsed .arraypress-repeater__row-header {
-    border-bottom: none;
-    border-radius: 4px;
-}
-
-.arraypress-repeater__row-handle {
-    margin-right: 10px;
-    color: #c3c4c7;
-    cursor: move;
-}
-
-.arraypress-repeater__row-title {
-    flex: 1;
-    font-weight: 600;
-}
-
-.arraypress-repeater__row-toggle,
-.arraypress-repeater__row-remove {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px 10px;
-    color: #646970;
-}
-
-.arraypress-repeater__row-toggle:hover {
-    color: #2271b1;
-}
-
-.arraypress-repeater__row-remove:hover {
-    color: #d63638;
-}
-
-.arraypress-repeater__row-content {
-    padding: 12px;
-}
-
-.arraypress-repeater__row.is-collapsed .arraypress-repeater__row-content {
-    display: none;
-}
-
-.arraypress-repeater__field {
-    margin-bottom: 12px;
-}
-
-.arraypress-repeater__field:last-child {
-    margin-bottom: 0;
-}
-
-.arraypress-repeater__field-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 5px;
-}
-
-/* Sortable States */
-.arraypress-repeater__row.ui-sortable-placeholder {
-    visibility: visible !important;
-    background: #f0f6fc;
-    border: 2px dashed #2271b1;
-}
-
-.arraypress-repeater__row.ui-sortable-helper {
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-}
-
-/* ==========================================================================
-   Responsive Adjustments
-   ========================================================================== */
-
-@media screen and (max-width: 782px) {
-    .arraypress-amount-type {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .arraypress-amount-type input[type="number"] {
-        border-radius: 4px 4px 0 0;
-        margin-right: 0;
-        margin-bottom: -1px;
-    }
-
-    .arraypress-amount-type select {
-        border-radius: 0 0 4px 4px;
-    }
-
-    .arraypress-media-field {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .arraypress-gallery-item img {
-        width: 80px;
-        height: 80px;
-    }
-}
-
-/* ==========================================================================
-   RADIO BUTTONS
-   ========================================================================== */
-
+/**
+ * Radio button group container
+ * Default vertical layout
+ */
 .arraypress-radio-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
+/**
+ * Horizontal layout variant
+ */
 .arraypress-radio-group--horizontal {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 16px;
 }
 
+/**
+ * Individual radio button item
+ */
 .arraypress-radio-item {
     display: flex;
     align-items: center;
@@ -352,14 +299,21 @@
     margin: 0;
 }
 
+/**
+ * Radio button label text
+ */
 .arraypress-radio-label {
     font-weight: normal;
 }
 
 /* ==========================================================================
-   BUTTON GROUP
+   9. Button Group
    ========================================================================== */
 
+/**
+ * Button group container
+ * Connected toggle buttons for single or multiple selection
+ */
 .arraypress-button-group {
     display: inline-flex;
     flex-wrap: wrap;
@@ -369,6 +323,9 @@
     overflow: hidden;
 }
 
+/**
+ * Individual button item
+ */
 .arraypress-button-group__item {
     display: flex;
     align-items: center;
@@ -389,31 +346,46 @@
     background: #f0f0f1;
 }
 
+/**
+ * Selected state for button group items
+ */
 .arraypress-button-group__item.is-selected {
     background: #2271b1;
     color: #fff;
 }
 
+/**
+ * Hidden native input for button groups
+ */
 .arraypress-button-group__input {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
 
+/**
+ * Button label text
+ */
 .arraypress-button-group__label {
     font-weight: 500;
     white-space: nowrap;
 }
 
-/* Multiple selection variant */
+/**
+ * Multiple selection variant
+ * Slightly different color for visual distinction
+ */
 .arraypress-button-group--multiple .arraypress-button-group__item.is-selected {
     background: #135e96;
 }
 
 /* ==========================================================================
-   RANGE SLIDER
+   10. Range Slider
    ========================================================================== */
 
+/**
+ * Range slider field container
+ */
 .arraypress-range-field {
     display: flex;
     align-items: center;
@@ -421,6 +393,10 @@
     max-width: 400px;
 }
 
+/**
+ * Range input styling
+ * Custom track appearance
+ */
 .arraypress-range-input {
     flex: 1;
     height: 6px;
@@ -431,6 +407,9 @@
     outline: none;
 }
 
+/**
+ * WebKit range thumb styling
+ */
 .arraypress-range-input::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -446,6 +425,9 @@
     background: #135e96;
 }
 
+/**
+ * Firefox range thumb styling
+ */
 .arraypress-range-input::-moz-range-thumb {
     width: 18px;
     height: 18px;
@@ -455,6 +437,9 @@
     cursor: pointer;
 }
 
+/**
+ * Range value output display
+ */
 .arraypress-range-output {
     min-width: 50px;
     padding: 4px 8px;
@@ -467,9 +452,182 @@
 }
 
 /* ==========================================================================
-   REPEATER - HORIZONTAL LAYOUT
+   11. Group Field
    ========================================================================== */
 
+/**
+ * Group field container
+ * Visual container for related fields
+ */
+.arraypress-group {
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #dcdcde;
+}
+
+/**
+ * Individual field within a group
+ */
+.arraypress-group__field {
+    margin-bottom: 12px;
+}
+
+.arraypress-group__field:last-child {
+    margin-bottom: 0;
+}
+
+/**
+ * Group field label
+ */
+.arraypress-group__label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+/* ==========================================================================
+   12. Repeater Field - Base
+   ========================================================================== */
+
+/**
+ * Repeater rows container
+ */
+.arraypress-repeater__rows {
+    margin-bottom: 10px;
+}
+
+/**
+ * Individual repeater row
+ */
+.arraypress-repeater__row {
+    background: #f9f9f9;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.arraypress-repeater__row:last-child {
+    margin-bottom: 0;
+}
+
+/**
+ * Repeater row header
+ * Contains drag handle, title, toggle, and remove buttons
+ */
+.arraypress-repeater__row-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background: #fff;
+    border-bottom: 1px solid #dcdcde;
+    border-radius: 4px 4px 0 0;
+    cursor: move;
+}
+
+/**
+ * Collapsed row header styling
+ */
+.arraypress-repeater__row.is-collapsed .arraypress-repeater__row-header {
+    border-bottom: none;
+    border-radius: 4px;
+}
+
+/**
+ * Drag handle for reordering
+ */
+.arraypress-repeater__row-handle {
+    margin-right: 10px;
+    color: #c3c4c7;
+    cursor: move;
+}
+
+/**
+ * Row title text
+ */
+.arraypress-repeater__row-title {
+    flex: 1;
+    font-weight: 600;
+}
+
+/**
+ * Row toggle and remove buttons
+ */
+.arraypress-repeater__row-toggle,
+.arraypress-repeater__row-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    color: #646970;
+}
+
+.arraypress-repeater__row-toggle:hover {
+    color: #2271b1;
+}
+
+.arraypress-repeater__row-remove:hover {
+    color: #d63638;
+}
+
+/**
+ * Row content container
+ */
+.arraypress-repeater__row-content {
+    padding: 12px;
+}
+
+/**
+ * Hidden content for collapsed rows
+ */
+.arraypress-repeater__row.is-collapsed .arraypress-repeater__row-content {
+    display: none;
+}
+
+/**
+ * Individual field within repeater row
+ */
+.arraypress-repeater__field {
+    margin-bottom: 12px;
+}
+
+.arraypress-repeater__field:last-child {
+    margin-bottom: 0;
+}
+
+/**
+ * Repeater field label
+ */
+.arraypress-repeater__field-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+/**
+ * jQuery UI Sortable placeholder
+ */
+.arraypress-repeater__row.ui-sortable-placeholder {
+    visibility: visible !important;
+    background: #f0f6fc;
+    border: 2px dashed #2271b1;
+}
+
+/**
+ * jQuery UI Sortable helper (dragged item)
+ */
+.arraypress-repeater__row.ui-sortable-helper {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================================
+   13. Repeater Field - Horizontal Layout
+   ========================================================================== */
+
+/**
+ * Horizontal layout row content
+ * Fields displayed side by side
+ */
 .arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__row-content {
     display: flex;
     flex-wrap: wrap;
@@ -477,11 +635,18 @@
     gap: 12px;
 }
 
+/**
+ * Horizontal layout fields
+ * Flexible width with minimum
+ */
 .arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__field {
     flex: 1;
     min-width: 120px;
 }
 
+/**
+ * Horizontal layout header
+ */
 .arraypress-repeater--horizontal .arraypress-repeater__row-header {
     display: flex;
     align-items: center;
@@ -490,21 +655,30 @@
     border-bottom: 1px solid #dcdcde;
 }
 
+/**
+ * Horizontal layout row title
+ */
 .arraypress-repeater--horizontal .arraypress-repeater__row-title {
     flex: 1;
     font-weight: 500;
 }
 
 /* ==========================================================================
-   REPEATER - TABLE LAYOUT
+   14. Repeater Field - Table Layout
    ========================================================================== */
 
+/**
+ * Table layout container
+ */
 .arraypress-repeater--table .arraypress-repeater__table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 12px;
 }
 
+/**
+ * Table header cells
+ */
 .arraypress-repeater--table .arraypress-repeater__table thead th {
     text-align: left;
     padding: 10px 8px;
@@ -514,16 +688,25 @@
     font-size: 13px;
 }
 
+/**
+ * Table handle column width
+ */
 .arraypress-repeater--table .arraypress-repeater__table-handle {
     width: 30px;
     text-align: center;
 }
 
+/**
+ * Table actions column width
+ */
 .arraypress-repeater--table .arraypress-repeater__table-actions {
     width: 40px;
     text-align: center;
 }
 
+/**
+ * Table body rows
+ */
 .arraypress-repeater--table .arraypress-repeater__table tbody tr {
     border-bottom: 1px solid #dcdcde;
 }
@@ -532,16 +715,25 @@
     border-bottom: none;
 }
 
+/**
+ * Table body cells
+ */
 .arraypress-repeater--table .arraypress-repeater__table tbody td {
     padding: 8px;
     vertical-align: middle;
 }
 
+/**
+ * Table drag handle
+ */
 .arraypress-repeater--table .arraypress-repeater__row-handle {
     cursor: move;
     color: #8c8f94;
 }
 
+/**
+ * Table remove button
+ */
 .arraypress-repeater--table .arraypress-repeater__row-remove {
     background: none;
     border: none;
@@ -556,7 +748,9 @@
     color: #a00;
 }
 
-/* Table inputs full width */
+/**
+ * Table inputs - full width
+ */
 .arraypress-repeater--table .arraypress-repeater__field input[type="text"],
 .arraypress-repeater--table .arraypress-repeater__field input[type="url"],
 .arraypress-repeater--table .arraypress-repeater__field input[type="email"],
@@ -567,7 +761,9 @@
     width: 100%;
 }
 
-/* Sortable placeholder for table */
+/**
+ * Table sortable placeholder
+ */
 .arraypress-repeater--table .ui-sortable-placeholder {
     height: 50px;
     background: #f0f6fc;
@@ -575,7 +771,9 @@
     visibility: visible !important;
 }
 
-/* Empty state for table repeater */
+/**
+ * Empty state row for table repeater
+ */
 .arraypress-repeater__empty-row td {
     text-align: center;
     padding: 20px;
@@ -585,18 +783,60 @@
 }
 
 /* ==========================================================================
-   SELECT2 ADJUSTMENTS
+   15. Select2 Adjustments
    ========================================================================== */
 
+/**
+ * Select2 full width in table layout
+ */
 .arraypress-repeater--table .select2-container {
     width: 100% !important;
 }
 
 /* ==========================================================================
-   RESPONSIVE ADJUSTMENTS
+   16. Responsive Adjustments
    ========================================================================== */
 
 @media screen and (max-width: 782px) {
+
+    /**
+     * Amount type - stack vertically on mobile
+     */
+    .arraypress-amount-type {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .arraypress-amount-type input[type="number"] {
+        border-radius: 4px 4px 0 0;
+        margin-right: 0;
+        margin-bottom: -1px;
+        border-right: 1px solid #8c8f94;
+    }
+
+    .arraypress-amount-type select {
+        border-radius: 0 0 4px 4px;
+    }
+
+    /**
+     * Media fields - stack vertically on mobile
+     */
+    .arraypress-media-field {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /**
+     * Smaller gallery thumbnails on mobile
+     */
+    .arraypress-gallery-item img {
+        width: 80px;
+        height: 80px;
+    }
+
+    /**
+     * Button group - wrap on mobile
+     */
     .arraypress-button-group {
         flex-wrap: wrap;
     }
@@ -606,6 +846,9 @@
         min-width: 80px;
     }
 
+    /**
+     * Horizontal repeater - stack on mobile
+     */
     .arraypress-repeater--horizontal .arraypress-repeater__row--horizontal .arraypress-repeater__row-content {
         flex-direction: column;
     }
@@ -614,6 +857,9 @@
         width: 100%;
     }
 
+    /**
+     * Table repeater - horizontal scroll on mobile
+     */
     .arraypress-repeater--table .arraypress-repeater__table {
         display: block;
         overflow-x: auto;

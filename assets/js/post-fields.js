@@ -2,24 +2,67 @@
  * Post Fields JavaScript
  *
  * Handles all interactive functionality for the WordPress Register Post Fields library.
+ * Provides support for media uploads, galleries, repeaters, conditional logic,
+ * AJAX selects, button groups, range sliders, and more.
  *
- * @package ArrayPress\RegisterPostFields
- * @version 2.0.0
+ * @package     ArrayPress\RegisterPostFields
+ * @copyright   Copyright (c) 2026, ArrayPress Limited
+ * @license     GPL2+
+ * @version     2.0.0
+ * @author      David Sherlock
+ *
+ * Dependencies:
+ * - jQuery
+ * - jQuery UI Sortable
+ * - WordPress Media Library (wp.media)
+ * - WordPress Color Picker (wp-color-picker)
+ * - Select2 (for AJAX selects)
+ *
+ * Table of Contents:
+ * 1. Configuration & Initialization
+ * 2. Color Pickers
+ * 3. Media Fields (Image/File)
+ * 4. Gallery Fields
+ * 5. Repeater Fields
+ * 6. Conditional Logic
+ * 7. Button Groups
+ * 8. Range Sliders
+ * 9. AJAX Selects
  */
 
 (function ($) {
     'use strict';
 
-    // Configuration from PHP (localized)
+    /* =========================================================================
+       1. Configuration & Initialization
+       ========================================================================= */
+
+    /**
+     * Configuration object from PHP (localized via wp_localize_script)
+     *
+     * @type {Object}
+     * @property {Object} conditions - Field conditional logic configurations
+     * @property {string} restUrl    - REST API base URL for AJAX requests
+     * @property {string} nonce      - WordPress REST API nonce
+     */
     var config = window.arraypressPostFields || {};
 
     /**
      * Post Fields Controller
+     *
+     * Main controller object that manages all field interactions.
+     *
+     * @namespace PostFields
      */
     var PostFields = {
 
         /**
          * Initialize all functionality
+         *
+         * Called on document ready to set up all field types.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         init: function () {
             this.initColorPickers();
@@ -32,27 +75,45 @@
             this.initRangeSliders();
         },
 
+        /* =====================================================================
+           2. Color Pickers
+           ===================================================================== */
+
         /**
-         * Initialize color picker fields
+         * Initialize WordPress color picker fields
+         *
+         * Applies the wpColorPicker plugin to all color picker inputs.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         initColorPickers: function () {
             $('.arraypress-color-picker').wpColorPicker();
         },
 
+        /* =====================================================================
+           3. Media Fields (Image/File)
+           ===================================================================== */
+
         /**
-         * Initialize media (image/file) fields
+         * Initialize media (image/file) field interactions
+         *
+         * Sets up event handlers for selecting and removing media.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         initMediaFields: function () {
             var self = this;
 
-            // Select media
+            // Select media button click
             $(document).on('click', '.arraypress-media-select', function (e) {
                 e.preventDefault();
                 var $field = $(this).closest('.arraypress-media-field');
                 self.openMediaFrame($field);
             });
 
-            // Remove media
+            // Remove media button click
             $(document).on('click', '.arraypress-media-remove', function (e) {
                 e.preventDefault();
                 var $field = $(this).closest('.arraypress-media-field');
@@ -61,9 +122,13 @@
         },
 
         /**
-         * Open media library frame
+         * Open WordPress media library frame
          *
-         * @param {jQuery} $field The media field container
+         * Opens the media library for selecting an image or file.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field - The media field container element
+         * @return {void}
          */
         openMediaFrame: function ($field) {
             var $input = $field.find('.arraypress-media-input');
@@ -81,13 +146,19 @@
                 $input.val(attachment.id).trigger('change');
 
                 if (type === 'image') {
+                    // Use thumbnail size if available, otherwise full URL
                     var url = attachment.sizes && attachment.sizes.thumbnail
                         ? attachment.sizes.thumbnail.url
                         : attachment.url;
-                    $field.find('.arraypress-media-preview').html('<img src="' + url + '" alt="" />');
+                    $field.find('.arraypress-media-preview').html(
+                        '<img src="' + url + '" alt="" />'
+                    );
                 } else {
+                    // File type - show filename with link
                     $field.find('.arraypress-file-preview').html(
-                        '<a href="' + attachment.url + '" target="_blank">' + attachment.filename + '</a>'
+                        '<a href="' + attachment.url + '" target="_blank">' +
+                        attachment.filename +
+                        '</a>'
                     );
                 }
 
@@ -98,9 +169,13 @@
         },
 
         /**
-         * Remove media from field
+         * Remove media from a field
          *
-         * @param {jQuery} $field The media field container
+         * Clears the input value and preview for a media field.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field - The media field container element
+         * @return {void}
          */
         removeMedia: function ($field) {
             $field.find('.arraypress-media-input').val('').trigger('change');
@@ -108,20 +183,29 @@
             $field.find('.arraypress-media-remove').hide();
         },
 
+        /* =====================================================================
+           4. Gallery Fields
+           ===================================================================== */
+
         /**
-         * Initialize gallery fields
+         * Initialize gallery field interactions
+         *
+         * Sets up event handlers for adding/removing images and sortable functionality.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         initGalleryFields: function () {
             var self = this;
 
-            // Add images
+            // Add images button click
             $(document).on('click', '.arraypress-gallery-add', function (e) {
                 e.preventDefault();
                 var $field = $(this).closest('.arraypress-gallery-field');
                 self.openGalleryFrame($field);
             });
 
-            // Remove single image
+            // Remove single image button click
             $(document).on('click', '.arraypress-gallery-remove', function (e) {
                 e.preventDefault();
                 var $item = $(this).closest('.arraypress-gallery-item');
@@ -129,7 +213,7 @@
                 self.removeGalleryItem($item, $field);
             });
 
-            // Make galleries sortable
+            // Make galleries sortable via drag and drop
             $('.arraypress-gallery-preview').sortable({
                 items: '.arraypress-gallery-item',
                 cursor: 'move',
@@ -141,9 +225,13 @@
         },
 
         /**
-         * Open gallery media frame
+         * Open media library for gallery selection
          *
-         * @param {jQuery} $field The gallery field container
+         * Opens the media library in multiple selection mode for galleries.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field - The gallery field container element
+         * @return {void}
          */
         openGalleryFrame: function ($field) {
             var self = this;
@@ -163,14 +251,24 @@
                 var currentIds = $input.val() ? $input.val().split(',') : [];
 
                 attachments.forEach(function (attachment) {
-                    if (max > 0 && currentIds.length >= max) return;
-                    if (currentIds.indexOf(String(attachment.id)) !== -1) return;
+                    // Check max items limit
+                    if (max > 0 && currentIds.length >= max) {
+                        return;
+                    }
+
+                    // Skip if already in gallery
+                    if (currentIds.indexOf(String(attachment.id)) !== -1) {
+                        return;
+                    }
 
                     currentIds.push(attachment.id);
+
+                    // Get thumbnail URL
                     var url = attachment.sizes && attachment.sizes.thumbnail
                         ? attachment.sizes.thumbnail.url
                         : attachment.url;
 
+                    // Add to preview
                     $preview.append(
                         '<div class="arraypress-gallery-item" data-id="' + attachment.id + '">' +
                         '<img src="' + url + '" alt="" />' +
@@ -186,10 +284,12 @@
         },
 
         /**
-         * Remove a single gallery item
+         * Remove a single image from gallery
          *
-         * @param {jQuery} $item  The gallery item to remove
-         * @param {jQuery} $field The gallery field container
+         * @memberof PostFields
+         * @param {jQuery} $item  - The gallery item to remove
+         * @param {jQuery} $field - The gallery field container
+         * @return {void}
          */
         removeGalleryItem: function ($item, $field) {
             $item.remove();
@@ -199,7 +299,11 @@
         /**
          * Update gallery hidden input with current image IDs
          *
-         * @param {jQuery} $field The gallery field container
+         * Rebuilds the comma-separated list of attachment IDs from the current order.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field - The gallery field container
+         * @return {void}
          */
         updateGalleryInput: function ($field) {
             var $input = $field.find('.arraypress-gallery-input');
@@ -212,20 +316,29 @@
             $input.val(ids.join(',')).trigger('change');
         },
 
+        /* =====================================================================
+           5. Repeater Fields
+           ===================================================================== */
+
         /**
-         * Initialize repeater fields
+         * Initialize repeater field interactions
+         *
+         * Sets up event handlers for adding/removing/reordering rows.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         initRepeaterFields: function () {
             var self = this;
 
-            // Add row
+            // Add row button click
             $(document).on('click', '.arraypress-repeater__add', function (e) {
                 e.preventDefault();
                 var $repeater = $(this).closest('.arraypress-repeater');
                 self.addRepeaterRow($repeater);
             });
 
-            // Remove row
+            // Remove row button click
             $(document).on('click', '.arraypress-repeater__row-remove', function (e) {
                 e.preventDefault();
                 var $repeater = $(this).closest('.arraypress-repeater');
@@ -233,13 +346,13 @@
                 self.removeRepeaterRow($repeater, $row);
             });
 
-            // Toggle row collapse (only for vertical layout)
+            // Toggle row collapse (vertical layout only)
             $(document).on('click', '.arraypress-repeater__row-toggle', function (e) {
                 e.preventDefault();
                 $(this).closest('.arraypress-repeater__row').toggleClass('is-collapsed');
             });
 
-            // Make standard rows sortable
+            // Make standard repeater rows sortable
             $('.arraypress-repeater__rows').sortable({
                 handle: '.arraypress-repeater__row-handle',
                 items: '.arraypress-repeater__row',
@@ -251,13 +364,14 @@
                 }
             });
 
-            // Make table rows sortable
+            // Make table layout rows sortable
             $('.arraypress-repeater--table .arraypress-repeater__table tbody').sortable({
                 handle: '.arraypress-repeater__row-handle',
                 items: 'tr.arraypress-repeater__row',
                 cursor: 'move',
                 placeholder: 'ui-sortable-placeholder',
                 helper: function (e, tr) {
+                    // Preserve cell widths during drag
                     var $originals = tr.children();
                     var $helper = tr.clone();
                     $helper.children().each(function (index) {
@@ -273,9 +387,13 @@
         },
 
         /**
-         * Add a new repeater row
+         * Add a new row to a repeater field
          *
-         * @param {jQuery} $repeater The repeater container
+         * Clones the template row and initializes any nested components.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $repeater - The repeater container element
+         * @return {void}
          */
         addRepeaterRow: function ($repeater) {
             var self = this;
@@ -283,7 +401,7 @@
             var $template = $repeater.find('.arraypress-repeater__template');
             var max = parseInt($repeater.data('max')) || 0;
 
-            // Get rows container based on layout
+            // Get rows container based on layout type
             var $rows;
             if (layout === 'table') {
                 $rows = $repeater.find('.arraypress-repeater__table tbody');
@@ -293,6 +411,7 @@
 
             var currentCount = $rows.find('.arraypress-repeater__row').length;
 
+            // Check max items limit
             if (max > 0 && currentCount >= max) {
                 alert('Maximum items reached');
                 return;
@@ -300,7 +419,7 @@
 
             var newIndex = currentCount;
 
-            // For table layout, get the row from inside the template's table
+            // Clone template row
             var $newRow;
             if (layout === 'table') {
                 $newRow = $($template.find('tr').prop('outerHTML'));
@@ -322,13 +441,14 @@
             // Hide empty state row if present (table layout)
             $repeater.find('.arraypress-repeater__empty-row').hide();
 
+            // Append new row
             $rows.append($newRow);
             this.updateRepeaterIndexes($repeater);
 
-            // Initialize components in new row
+            // Initialize components in the new row
             $newRow.find('.arraypress-color-picker').wpColorPicker();
 
-            // Initialize ajax selects in new row
+            // Initialize AJAX selects in new row
             $newRow.find('.arraypress-ajax-select').each(function () {
                 self.initSingleAjaxSelect($(this));
             });
@@ -336,7 +456,8 @@
             // Initialize button groups state
             $newRow.find('.arraypress-button-group__input').each(function () {
                 var $input = $(this);
-                $input.closest('.arraypress-button-group__item').toggleClass('is-selected', $input.is(':checked'));
+                $input.closest('.arraypress-button-group__item')
+                    .toggleClass('is-selected', $input.is(':checked'));
             });
 
             // Evaluate conditional fields in the new row
@@ -344,16 +465,18 @@
         },
 
         /**
-         * Remove a repeater row
+         * Remove a row from a repeater field
          *
-         * @param {jQuery} $repeater The repeater container
-         * @param {jQuery} $row      The row to remove
+         * @memberof PostFields
+         * @param {jQuery} $repeater - The repeater container element
+         * @param {jQuery} $row      - The row to remove
+         * @return {void}
          */
         removeRepeaterRow: function ($repeater, $row) {
             var layout = $repeater.data('layout') || 'vertical';
             var min = parseInt($repeater.data('min')) || 0;
 
-            // Get rows container based on layout
+            // Get rows container based on layout type
             var $rows;
             if (layout === 'table') {
                 $rows = $repeater.find('.arraypress-repeater__table tbody');
@@ -363,12 +486,13 @@
 
             var currentCount = $rows.find('.arraypress-repeater__row').length;
 
+            // Check min items limit
             if (min > 0 && currentCount <= min) {
                 alert('Minimum items required');
                 return;
             }
 
-            // Destroy Select2 before removing
+            // Destroy Select2 before removing to prevent memory leaks
             $row.find('.select2-hidden-accessible').select2('destroy');
 
             $row.remove();
@@ -383,13 +507,17 @@
         /**
          * Update repeater row indexes after add/remove/sort
          *
-         * @param {jQuery} $repeater The repeater container
+         * Re-indexes all rows and updates their input name attributes.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $repeater - The repeater container element
+         * @return {void}
          */
         updateRepeaterIndexes: function ($repeater) {
             var layout = $repeater.data('layout') || 'vertical';
             var metaKey = $repeater.data('meta-key');
 
-            // Get rows based on layout
+            // Get rows based on layout type
             var $rows;
             if (layout === 'table') {
                 $rows = $repeater.find('.arraypress-repeater__table tbody .arraypress-repeater__row');
@@ -402,6 +530,7 @@
                 $row.attr('data-index', index);
                 $row.find('.arraypress-repeater__row-title').text('Item ' + (index + 1));
 
+                // Update all input names with new index
                 $row.find('[name]').each(function () {
                     var name = $(this).attr('name');
                     var newName = name.replace(/\[\d+\]/, '[' + index + ']');
@@ -410,100 +539,86 @@
             });
         },
 
+        /* =====================================================================
+           6. Conditional Logic
+           ===================================================================== */
+
         /**
-         * Initialize conditional field logic using event delegation
+         * Initialize conditional field logic
+         *
+         * Sets up event delegation for handling show/hide based on field values.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         initConditionalLogic: function () {
             var self = this;
 
-            // Use event delegation on the document for all form changes
-            // This handles both existing and dynamically added elements
-            $(document).on('change input', '.arraypress-metabox input, .arraypress-metabox select, .arraypress-metabox textarea', function () {
-                var $input = $(this);
+            // Use event delegation for all form field changes
+            $(document).on(
+                'change input',
+                '.arraypress-metabox input, .arraypress-metabox select, .arraypress-metabox textarea',
+                function () {
+                    var $input = $(this);
 
-                // Ignore inputs in the template
-                if ($input.closest('.arraypress-repeater__template').length) {
-                    return;
+                    // Ignore inputs in the template (not yet added to DOM properly)
+                    if ($input.closest('.arraypress-repeater__template').length) {
+                        return;
+                    }
+
+                    // Check if we're inside a repeater row
+                    var $row = $input.closest('.arraypress-repeater__row');
+
+                    if ($row.length) {
+                        // Evaluate conditions within this row only
+                        self.evaluateRowConditions($row);
+                    } else {
+                        // Top-level field - evaluate all conditions in the metabox
+                        var $metabox = $input.closest('.arraypress-metabox');
+                        self.evaluateMetaboxConditions($metabox);
+                    }
                 }
+            );
 
-                // Check if we're in a repeater row
-                var $row = $input.closest('.arraypress-repeater__row');
-
-                if ($row.length) {
-                    // We're in a repeater row - evaluate conditions within this row
-                    self.evaluateRowConditions($row);
-                } else {
-                    // Top-level field or group - evaluate all conditions in the metabox
-                    var $metabox = $input.closest('.arraypress-metabox');
-                    self.evaluateMetaboxConditions($metabox);
-                }
-            });
-
-            // Initial evaluation of all conditional fields
+            // Initial evaluation of all conditional fields on page load
             this.evaluateAllConditions();
         },
 
         /**
-         * Initialize button group fields
-         */
-        initButtonGroups: function () {
-            // Handle button group clicks with event delegation
-            $(document).on('change', '.arraypress-button-group__input', function () {
-                var $input = $(this);
-                var $group = $input.closest('.arraypress-button-group');
-                var isMultiple = $group.hasClass('arraypress-button-group--multiple');
-
-                if (isMultiple) {
-                    // Toggle this item
-                    $input.closest('.arraypress-button-group__item').toggleClass('is-selected', $input.is(':checked'));
-                } else {
-                    // Radio - only one selected
-                    $group.find('.arraypress-button-group__item').removeClass('is-selected');
-                    $input.closest('.arraypress-button-group__item').addClass('is-selected');
-                }
-            });
-        },
-
-        /**
-         * Initialize range slider fields
-         */
-        initRangeSliders: function () {
-            // Update output on input
-            $(document).on('input', '.arraypress-range-input', function () {
-                var $input = $(this);
-                var $output = $input.siblings('.arraypress-range-output');
-                var $field = $input.closest('.arraypress-range-field');
-                var unit = $field.data('unit') || '';
-
-                $output.text($input.val() + unit);
-            });
-        },
-
-        /**
          * Evaluate all conditional fields on the page
+         *
+         * Called on initialization to set initial visibility state.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         evaluateAllConditions: function () {
             var self = this;
 
+            // Evaluate top-level fields in each metabox
             $('.arraypress-metabox').each(function () {
                 self.evaluateMetaboxConditions($(this));
             });
 
-            // Evaluate fields in existing repeater rows (not template)
+            // Evaluate fields in existing repeater rows (not templates)
             $('.arraypress-repeater__rows .arraypress-repeater__row').each(function () {
                 self.evaluateRowConditions($(this));
             });
         },
 
         /**
-         * Evaluate all conditional fields in a metabox (excluding repeater rows)
+         * Evaluate all conditional fields in a metabox
          *
-         * @param {jQuery} $metabox The metabox container
+         * Evaluates top-level fields and group fields, excluding repeater rows.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $metabox - The metabox container element
+         * @return {void}
          */
         evaluateMetaboxConditions: function ($metabox) {
             var self = this;
 
-            // Find conditional fields that are direct children or in groups (but not in repeaters)
+            // Find conditional fields that are NOT inside repeaters
             $metabox.find('[data-show-when]').each(function () {
                 var $field = $(this);
 
@@ -519,7 +634,9 @@
         /**
          * Evaluate conditional fields within a repeater row
          *
-         * @param {jQuery} $row The repeater row
+         * @memberof PostFields
+         * @param {jQuery} $row - The repeater row element
+         * @return {void}
          */
         evaluateRowConditions: function ($row) {
             var self = this;
@@ -532,8 +649,12 @@
         /**
          * Evaluate a single conditional field
          *
-         * @param {jQuery} $field   The field wrapper with data-show-when
-         * @param {jQuery} $context Context for finding controller fields
+         * Checks all conditions and shows/hides the field accordingly.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field   - The field wrapper with data-show-when attribute
+         * @param {jQuery} $context - Context element for finding controller fields
+         * @return {void}
          */
         evaluateSingleField: function ($field, $context) {
             var conditions = $field.data('show-when');
@@ -556,7 +677,7 @@
                 }
             }
 
-            // Show or hide field
+            // Show or hide field based on evaluation
             if (allMet) {
                 $field.removeClass('arraypress-field--hidden');
             } else {
@@ -567,8 +688,11 @@
         /**
          * Get the current value of a field
          *
-         * @param {string} fieldKey The field key
-         * @param {jQuery} $context The context element
+         * Looks up a field by its key within the given context.
+         *
+         * @memberof PostFields
+         * @param {string} fieldKey - The field key to look up
+         * @param {jQuery} $context - The context element to search within
          * @return {mixed} The field value
          */
         getFieldValue: function (fieldKey, $context) {
@@ -581,10 +705,8 @@
                 $input = $fieldWrapper.find('input, select, textarea').first();
             }
 
-            // If not found and we're in a repeater row, don't fall back to document level
-            // This ensures row-scoped lookups stay within the row
+            // If not found and we're NOT in a repeater row, fall back to document level
             if ((!$input || !$input.length) && !$context.hasClass('arraypress-repeater__row')) {
-                // Fall back to name-based search at document level
                 $input = $('[name="' + fieldKey + '"], [name="' + fieldKey + '[]"]').first();
             }
 
@@ -608,10 +730,13 @@
         /**
          * Evaluate a single condition
          *
-         * @param {mixed}  actualValue The actual field value
-         * @param {string} operator    The comparison operator
-         * @param {mixed}  expected    The expected value
-         * @return {boolean} Whether the condition is met
+         * Compares actual value against expected value using the specified operator.
+         *
+         * @memberof PostFields
+         * @param {mixed}  actualValue - The actual field value
+         * @param {string} operator    - The comparison operator
+         * @param {mixed}  expected    - The expected value
+         * @return {boolean} True if condition is met
          */
         evaluateCondition: function (actualValue, operator, expected) {
             // Normalize values for comparison
@@ -666,6 +791,7 @@
                     return actual && actual !== '' && actual !== '0' && actual !== 0;
 
                 default:
+                    // Default to equality check
                     return actual == expect;
             }
         },
@@ -673,7 +799,10 @@
         /**
          * Normalize a value for comparison
          *
-         * @param {mixed} value The value to normalize
+         * Converts string numbers to actual numbers for proper comparison.
+         *
+         * @memberof PostFields
+         * @param {mixed} value - The value to normalize
          * @return {mixed} Normalized value
          */
         normalizeValue: function (value) {
@@ -681,7 +810,7 @@
                 return '';
             }
 
-            // Convert string numbers to actual numbers for comparison
+            // Convert string numbers to actual numbers
             if (typeof value === 'string' && !isNaN(value) && value !== '') {
                 return parseFloat(value);
             }
@@ -689,13 +818,77 @@
             return value;
         },
 
+        /* =====================================================================
+           7. Button Groups
+           ===================================================================== */
+
         /**
-         * Initialize all ajax select fields
+         * Initialize button group fields
+         *
+         * Sets up visual state handling for toggle button groups.
+         *
+         * @memberof PostFields
+         * @return {void}
+         */
+        initButtonGroups: function () {
+            // Handle button group input changes with event delegation
+            $(document).on('change', '.arraypress-button-group__input', function () {
+                var $input = $(this);
+                var $group = $input.closest('.arraypress-button-group');
+                var isMultiple = $group.hasClass('arraypress-button-group--multiple');
+
+                if (isMultiple) {
+                    // Toggle this item's selected state
+                    $input.closest('.arraypress-button-group__item')
+                        .toggleClass('is-selected', $input.is(':checked'));
+                } else {
+                    // Radio - only one can be selected
+                    $group.find('.arraypress-button-group__item').removeClass('is-selected');
+                    $input.closest('.arraypress-button-group__item').addClass('is-selected');
+                }
+            });
+        },
+
+        /* =====================================================================
+           8. Range Sliders
+           ===================================================================== */
+
+        /**
+         * Initialize range slider fields
+         *
+         * Sets up live output updates for range inputs.
+         *
+         * @memberof PostFields
+         * @return {void}
+         */
+        initRangeSliders: function () {
+            // Update output display on input change
+            $(document).on('input', '.arraypress-range-input', function () {
+                var $input = $(this);
+                var $output = $input.siblings('.arraypress-range-output');
+                var $field = $input.closest('.arraypress-range-field');
+                var unit = $field.data('unit') || '';
+
+                $output.text($input.val() + unit);
+            });
+        },
+
+        /* =====================================================================
+           9. AJAX Selects
+           ===================================================================== */
+
+        /**
+         * Initialize all AJAX select fields
+         *
+         * Finds and initializes Select2 on all AJAX-powered select fields.
+         *
+         * @memberof PostFields
+         * @return {void}
          */
         initAjaxSelects: function () {
             var self = this;
 
-            // Initialize all ajax selects not in templates
+            // Initialize all AJAX selects not in templates
             $('.arraypress-ajax-select').each(function () {
                 var $select = $(this);
 
@@ -709,9 +902,13 @@
         },
 
         /**
-         * Initialize a single ajax select field
+         * Initialize a single AJAX select field
          *
-         * @param {jQuery} $select The select element
+         * Configures Select2 with AJAX data source and hydrates existing values.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $select - The select element to initialize
+         * @return {void}
          */
         initSingleAjaxSelect: function ($select) {
             var self = this;
@@ -781,14 +978,18 @@
         },
 
         /**
-         * Hydrate ajax select with labels for existing values
+         * Hydrate AJAX select with labels for existing values
          *
-         * @param {jQuery} $select    The select element
-         * @param {Array}  ids        Array of IDs to hydrate
-         * @param {string} metaboxId  The metabox ID
-         * @param {string} fieldKey   The field key
-         * @param {string} restUrl    The REST URL
-         * @param {string} nonce      The WP nonce
+         * Fetches display labels for pre-selected IDs from the server.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $select   - The select element
+         * @param {Array}  ids       - Array of IDs to hydrate
+         * @param {string} metaboxId - The metabox ID
+         * @param {string} fieldKey  - The field key
+         * @param {string} restUrl   - The REST API URL
+         * @param {string} nonce     - The WP REST nonce
+         * @return {void}
          */
         hydrateAjaxSelect: function ($select, ids, metaboxId, fieldKey, restUrl, nonce) {
             $.ajax({
@@ -817,8 +1018,12 @@
         }
     };
 
+    /* =========================================================================
+       Document Ready
+       ========================================================================= */
+
     /**
-     * Initialize on document ready
+     * Initialize Post Fields on document ready
      */
     $(document).ready(function () {
         PostFields.init();

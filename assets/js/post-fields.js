@@ -280,7 +280,7 @@
             // Initialize components in new row
             $newRow.find('.arraypress-color-picker').wpColorPicker();
 
-            // Initialize conditional logic for new row
+            // Initialize conditional logic for new row (with event binding)
             this.initRowConditionalLogic($newRow);
         },
 
@@ -332,24 +332,55 @@
             var self = this;
 
             // Find all conditional fields and set up listeners
-            $('[data-show-when]').each(function() {
+            $('.arraypress-metabox').find('[data-show-when]').each(function() {
                 var $field = $(this);
-                var conditions = $field.data('show-when');
+                var $row = $field.closest('.arraypress-repeater__row');
 
-                if (!conditions || !conditions.length) return;
+                // Skip fields inside the template
+                if ($field.closest('.arraypress-repeater__template').length) {
+                    return;
+                }
 
-                // Set up change listeners for each controller field
-                conditions.forEach(function(condition) {
-                    var controllerSelector = self.getFieldSelector(condition.field, $field);
+                // Skip fields inside repeater rows - they'll be initialized separately
+                if ($row.length) {
+                    return;
+                }
 
-                    $(document).on('change input', controllerSelector, function() {
+                self.bindConditionalField($field);
+            });
+
+            // Initialize existing repeater rows
+            $('.arraypress-repeater__rows .arraypress-repeater__row').each(function() {
+                self.initRowConditionalLogic($(this));
+            });
+        },
+
+        /**
+         * Bind conditional logic for a single field
+         *
+         * @param {jQuery} $field The conditional field
+         */
+        bindConditionalField: function($field) {
+            var self = this;
+            var conditions = $field.data('show-when');
+
+            if (!conditions || !conditions.length) return;
+
+            // Set up change listeners for each controller field
+            conditions.forEach(function(condition) {
+                var $context = $field.closest('.arraypress-repeater__row, .arraypress-group, .arraypress-metabox');
+                var $controller = self.findControllerField(condition.field, $context);
+
+                if ($controller.length) {
+                    // Bind change event directly to the controller element
+                    $controller.on('change input', function() {
                         self.evaluateFieldVisibility($field, conditions);
                     });
-                });
-
-                // Initial evaluation
-                self.evaluateFieldVisibility($field, conditions);
+                }
             });
+
+            // Initial evaluation
+            self.evaluateFieldVisibility($field, conditions);
         },
 
         /**
@@ -366,13 +397,47 @@
 
                 if (!conditions || !conditions.length) return;
 
+                // Bind change events to controller fields within this row
+                conditions.forEach(function(condition) {
+                    var $controller = self.findControllerField(condition.field, $row);
+
+                    if ($controller.length) {
+                        // Use .off().on() to prevent duplicate bindings
+                        $controller.off('change.conditional input.conditional')
+                            .on('change.conditional input.conditional', function() {
+                                self.evaluateFieldVisibility($field, conditions);
+                            });
+                    }
+                });
+
                 // Initial evaluation within row context
                 self.evaluateFieldVisibility($field, conditions);
             });
         },
 
         /**
-         * Get the selector for a controller field
+         * Find the controller field element
+         *
+         * @param {string} fieldKey The field key
+         * @param {jQuery} $context The context element
+         * @return {jQuery} The controller field input element
+         */
+        findControllerField: function(fieldKey, $context) {
+            var $input;
+
+            // Try to find within context first (for repeater/group fields)
+            $input = $context.find('[data-field-key="' + fieldKey + '"]').find('input, select, textarea').first();
+
+            // Fall back to document-level search for top-level fields
+            if (!$input.length) {
+                $input = $('[name="' + fieldKey + '"], [name="' + fieldKey + '[]"]').first();
+            }
+
+            return $input;
+        },
+
+        /**
+         * Get the selector for a controller field (deprecated - use findControllerField instead)
          *
          * @param {string} fieldKey The field key
          * @param {jQuery} $context The context element (for finding within groups/repeaters)
@@ -385,8 +450,8 @@
             if ($parent.length) {
                 // Within repeater/group - look for field within same parent
                 return '[data-field-key="' + fieldKey + '"] input, ' +
-                       '[data-field-key="' + fieldKey + '"] select, ' +
-                       '[data-field-key="' + fieldKey + '"] textarea';
+                    '[data-field-key="' + fieldKey + '"] select, ' +
+                    '[data-field-key="' + fieldKey + '"] textarea';
             }
 
             // Top-level field

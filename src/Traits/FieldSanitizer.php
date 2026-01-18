@@ -246,12 +246,8 @@ trait FieldSanitizer {
 				$sanitized_row[ $sub_key ] = $this->sanitize_value( $sub_value, $sub_field );
 			}
 
-			// Only add row if it has content
-			$has_content = array_filter( $sanitized_row, function ( $v ) {
-				return '' !== $v && null !== $v && [] !== $v;
-			} );
-
-			if ( ! empty( $has_content ) ) {
+			// Only add row if it has meaningful content
+			if ( $this->row_has_content( $sanitized_row, $field['fields'] ) ) {
 				$sanitized[] = $sanitized_row;
 			}
 		}
@@ -262,6 +258,78 @@ trait FieldSanitizer {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Check if a repeater row has meaningful content.
+	 *
+	 * This method determines whether a row should be saved by checking if any
+	 * field contains a value that differs from its default or empty state.
+	 *
+	 * @param array $row    The sanitized row values.
+	 * @param array $fields The field configurations.
+	 *
+	 * @return bool True if the row has content worth saving.
+	 */
+	protected function row_has_content( array $row, array $fields ): bool {
+		foreach ( $row as $key => $value ) {
+			$field_config = $fields[ $key ] ?? [];
+			$default      = $field_config['default'] ?? '';
+			$type         = $field_config['type'] ?? 'text';
+
+			// Skip if value matches the default
+			if ( $value === $default ) {
+				continue;
+			}
+
+			// Check based on field type
+			switch ( $type ) {
+				case 'checkbox':
+					// Checkbox with value 1 (checked) is content
+					if ( $value === 1 || $value === '1' || $value === true ) {
+						return true;
+					}
+					break;
+
+				case 'number':
+					// Non-zero numbers are content (but be careful with 0 as valid)
+					if ( $value !== '' && $value !== null && $value !== $default ) {
+						return true;
+					}
+					break;
+
+				case 'select':
+					// Non-empty select value that's not the default empty option
+					if ( $value !== '' && $value !== null ) {
+						return true;
+					}
+					break;
+
+				case 'image':
+				case 'file':
+					// Valid attachment ID is content
+					if ( ! empty( $value ) && $value > 0 ) {
+						return true;
+					}
+					break;
+
+				case 'gallery':
+					// Non-empty array is content
+					if ( is_array( $value ) && ! empty( $value ) ) {
+						return true;
+					}
+					break;
+
+				default:
+					// For text, textarea, url, email, etc. - non-empty string is content
+					if ( $value !== '' && $value !== null ) {
+						return true;
+					}
+					break;
+			}
+		}
+
+		return false;
 	}
 
 }

@@ -316,7 +316,7 @@ trait FieldSanitizer {
 
 				case 'number':
 					// Non-zero numbers are content (but be careful with 0 as valid)
-					if ( $value !== '' && $value !== null && $value !== $default ) {
+					if ( $value !== '' && $value !== null ) {
 						return true;
 					}
 					break;

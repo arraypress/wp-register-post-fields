@@ -907,7 +907,7 @@ trait FieldRenderer {
                 break;
 
             case 'ajax':
-                $multiple    = ! empty( $field['multiple'] );
+                $multiple = ! empty( $field['multiple'] );
                 $placeholder = $field['placeholder'] ?? 'Search...';
                 $name_attr   = $multiple ? $name . '[]' : $name;
                 $values      = $multiple ? (array) $value : ( $value ? [ $value ] : [] );

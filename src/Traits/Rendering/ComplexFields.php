@@ -31,370 +31,380 @@ namespace ArrayPress\RegisterPostFields\Traits\Rendering;
  */
 trait ComplexFields {
 
-	/**
-	 * Render an amount type field
-	 *
-	 * Combined numeric input with a type selector dropdown.
-	 * Useful for values like discounts (amount + percent/flat).
-	 * Stores the amount and type in separate meta keys.
-	 *
-	 * @param string $meta_key The field's meta key for the amount value.
-	 * @param array  $field    The field configuration array.
-	 * @param mixed  $value    The current amount value.
-	 * @param int    $post_id  The post ID.
-	 *
-	 * @return void
-	 */
-	protected function render_amount_type( string $meta_key, array $field, $value, int $post_id ): void {
-		$type_options = $this->get_options( $field['type_options'] );
-		$type_key     = $field['type_meta_key'];
-		$type_value   = get_post_meta( $post_id, $type_key, true );
+    /**
+     * Render an amount type field
+     *
+     * Combined numeric input with a type selector dropdown.
+     * Useful for values like discounts (amount + percent/flat).
+     * Stores the amount and type in separate meta keys.
+     *
+     * @param string $meta_key The field's meta key for the amount value.
+     * @param array  $field    The field configuration array.
+     * @param mixed  $value    The current amount value.
+     * @param int    $post_id  The post ID.
+     *
+     * @return void
+     */
+    protected function render_amount_type( string $meta_key, array $field, $value, int $post_id ): void {
+        $type_options = $this->get_options( $field['type_options'] );
+        $type_key     = $field['type_meta_key'];
+        $type_value   = get_post_meta( $post_id, $type_key, true );
 
-		// Use default type if none set
-		if ( empty( $type_value ) && ! empty( $field['type_default'] ) ) {
-			$type_value = $field['type_default'];
-		}
+        // Use default type if none set
+        if ( empty( $type_value ) && ! empty( $field['type_default'] ) ) {
+            $type_value = $field['type_default'];
+        }
 
-		// Build number input attributes
-		$min  = isset( $field['min'] ) ? ' min="' . esc_attr( $field['min'] ) . '"' : ' min="0"';
-		$max  = isset( $field['max'] ) ? ' max="' . esc_attr( $field['max'] ) . '"' : '';
-		$step = isset( $field['step'] ) ? ' step="' . esc_attr( $field['step'] ) . '"' : ' step="any"';
-		?>
-		<div class="arraypress-amount-type">
-			<input type="number"
-			       id="<?php echo esc_attr( $meta_key ); ?>"
-			       name="<?php echo esc_attr( $meta_key ); ?>"
-			       value="<?php echo esc_attr( $value ); ?>"
-			       class="small-text"
-				<?php echo $min . $max . $step; ?> />
+        // Build number input attributes
+        $min  = isset( $field['min'] ) ? ' min="' . esc_attr( $field['min'] ) . '"' : ' min="0"';
+        $max  = isset( $field['max'] ) ? ' max="' . esc_attr( $field['max'] ) . '"' : '';
+        $step = isset( $field['step'] ) ? ' step="' . esc_attr( $field['step'] ) . '"' : ' step="any"';
+        ?>
+        <div class="arraypress-amount-type">
+            <input type="number"
+                   id="<?php echo esc_attr( $meta_key ); ?>"
+                   name="<?php echo esc_attr( $meta_key ); ?>"
+                   value="<?php echo esc_attr( $value ); ?>"
+                   class="small-text"
+                    <?php echo $min . $max . $step; ?> />
 
-			<select name="<?php echo esc_attr( $type_key ); ?>">
-				<?php foreach ( $type_options as $option_value => $option_label ) : ?>
-					<option value="<?php echo esc_attr( $option_value ); ?>"
-						<?php selected( $type_value, $option_value ); ?>>
-						<?php echo esc_html( $option_label ); ?>
-					</option>
-				<?php endforeach; ?>
-			</select>
-		</div>
-		<?php
-	}
+            <select name="<?php echo esc_attr( $type_key ); ?>">
+                <?php foreach ( $type_options as $option_value => $option_label ) : ?>
+                    <option value="<?php echo esc_attr( $option_value ); ?>"
+                            <?php selected( $type_value, $option_value ); ?>>
+                        <?php echo esc_html( $option_label ); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php
+    }
 
-	/**
-	 * Render a group field
-	 *
-	 * Static group of related fields stored as an associative array.
-	 * Useful for grouping related data like dimensions (width, height, depth).
-	 *
-	 * @param string $meta_key The field's meta key.
-	 * @param array  $field    The field configuration array.
-	 * @param mixed  $value    The current field value (associative array).
-	 * @param int    $post_id  The post ID.
-	 *
-	 * @return void
-	 */
-	protected function render_group( string $meta_key, array $field, $value, int $post_id ): void {
-		$value = is_array( $value ) ? $value : [];
-		?>
-		<div class="arraypress-group">
-			<?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
-				$sub_value = $value[ $sub_key ] ?? $sub_field['default'];
-				$sub_name  = $meta_key . '[' . $sub_key . ']';
+    /**
+     * Render a group field
+     *
+     * Static group of related fields stored as an associative array.
+     * Useful for grouping related data like dimensions (width, height, depth).
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration array.
+     * @param mixed  $value    The current field value (associative array).
+     * @param int    $post_id  The post ID.
+     *
+     * @return void
+     */
+    protected function render_group( string $meta_key, array $field, $value, int $post_id ): void {
+        $value = is_array( $value ) ? $value : [];
 
-				// Build conditional attributes for nested field
-				$conditional_class = '';
-				$data_attrs        = '';
-				if ( ! empty( $sub_field['show_when'] ) ) {
-					$conditional_class = ' arraypress-conditional-field';
-					$data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
-				}
-				?>
-				<div class="arraypress-group__field<?php echo $conditional_class; ?>"
-				     data-field-key="<?php echo esc_attr( $sub_key ); ?>"
-					<?php echo $data_attrs; ?>>
+        // Set parent field context for nested AJAX fields
+        $this->set_parent_field_context( $meta_key );
+        ?>
+        <div class="arraypress-group">
+            <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
+                $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
+                $sub_name = $meta_key . '[' . $sub_key . ']';
 
-					<label class="arraypress-group__label">
-						<?php echo esc_html( $sub_field['label'] ); ?>
-					</label>
+                // Build conditional attributes for nested field
+                $conditional_class = '';
+                $data_attrs        = '';
+                if ( ! empty( $sub_field['show_when'] ) ) {
+                    $conditional_class = ' arraypress-conditional-field';
+                    $data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
+                }
+                ?>
+                <div class="arraypress-group__field<?php echo $conditional_class; ?>"
+                     data-field-key="<?php echo esc_attr( $sub_key ); ?>"
+                        <?php echo $data_attrs; ?>>
 
-					<?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
+                    <label class="arraypress-group__label">
+                        <?php echo esc_html( $sub_field['label'] ); ?>
+                    </label>
 
-					<?php if ( ! empty( $sub_field['description'] ) ) : ?>
-						<p class="arraypress-field__description">
-							<?php echo esc_html( $sub_field['description'] ); ?>
-						</p>
-					<?php endif; ?>
-				</div>
-			<?php endforeach; ?>
-		</div>
-		<?php
-	}
+                    <?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
 
-	/**
-	 * Render a repeater field
-	 *
-	 * Dynamic repeatable group of fields with add, remove, and
-	 * drag-and-drop reordering. Supports three layout modes:
-	 * vertical (default), horizontal, and table.
-	 *
-	 * @param string $meta_key The field's meta key.
-	 * @param array  $field    The field configuration array.
-	 * @param mixed  $value    The current field value (array of row arrays).
-	 * @param int    $post_id  The post ID.
-	 *
-	 * @return void
-	 */
-	protected function render_repeater( string $meta_key, array $field, $value, int $post_id ): void {
-		$value        = is_array( $value ) ? $value : [];
-		$button_label = $field['button_label'] ?: __( 'Add Row', 'arraypress' );
-		$max          = $field['max_items'] ?: 0;
-		$min          = $field['min_items'] ?: 0;
-		$layout       = $field['layout'] ?? 'vertical';
-		$layout_class = 'arraypress-repeater--' . $layout;
-		?>
-		<div class="arraypress-repeater <?php echo esc_attr( $layout_class ); ?>"
-		     data-meta-key="<?php echo esc_attr( $meta_key ); ?>"
-		     data-max="<?php echo esc_attr( $max ); ?>"
-		     data-min="<?php echo esc_attr( $min ); ?>"
-		     data-layout="<?php echo esc_attr( $layout ); ?>">
+                    <?php if ( ! empty( $sub_field['description'] ) ) : ?>
+                        <p class="arraypress-field__description">
+                            <?php echo esc_html( $sub_field['description'] ); ?>
+                        </p>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <?php
+        // Clear parent field context
+        $this->set_parent_field_context( null );
+    }
 
-			<?php if ( $layout === 'table' ) : ?>
-				<?php $this->render_repeater_table( $meta_key, $field, $value, $post_id ); ?>
-			<?php else : ?>
-				<?php $this->render_repeater_standard( $meta_key, $field, $value, $post_id, $layout ); ?>
-			<?php endif; ?>
+    /**
+     * Render a repeater field
+     *
+     * Dynamic repeatable group of fields with add, remove, and
+     * drag-and-drop reordering. Supports three layout modes:
+     * vertical (default), horizontal, and table.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration array.
+     * @param mixed  $value    The current field value (array of row arrays).
+     * @param int    $post_id  The post ID.
+     *
+     * @return void
+     */
+    protected function render_repeater( string $meta_key, array $field, $value, int $post_id ): void {
+        $value        = is_array( $value ) ? $value : [];
+        $button_label = $field['button_label'] ?: __( 'Add Row', 'arraypress' );
+        $max          = $field['max_items'] ?: 0;
+        $min          = $field['min_items'] ?: 0;
+        $layout       = $field['layout'] ?? 'vertical';
+        $layout_class = 'arraypress-repeater--' . $layout;
 
-			<button type="button" class="button arraypress-repeater__add">
-				<?php echo esc_html( $button_label ); ?>
-			</button>
-		</div>
-		<?php
-	}
+        // Set parent field context for nested AJAX fields
+        $this->set_parent_field_context( $meta_key );
+        ?>
+        <div class="arraypress-repeater <?php echo esc_attr( $layout_class ); ?>"
+             data-meta-key="<?php echo esc_attr( $meta_key ); ?>"
+             data-max="<?php echo esc_attr( $max ); ?>"
+             data-min="<?php echo esc_attr( $min ); ?>"
+             data-layout="<?php echo esc_attr( $layout ); ?>">
 
-	/**
-	 * Render standard repeater layout (vertical or horizontal)
-	 *
-	 * Renders rows as collapsible panels with header and content areas.
-	 *
-	 * @param string $meta_key The field's meta key.
-	 * @param array  $field    The field configuration array.
-	 * @param array  $value    The current field values (array of rows).
-	 * @param int    $post_id  The post ID.
-	 * @param string $layout   The layout type (vertical or horizontal).
-	 *
-	 * @return void
-	 */
-	protected function render_repeater_standard( string $meta_key, array $field, array $value, int $post_id, string $layout ): void {
-		$collapsed = $field['collapsed'] ?? false;
-		?>
-		<div class="arraypress-repeater__rows">
-			<?php
-			$index = 0;
-			foreach ( $value as $row_value ) :
-				$this->render_repeater_row( $meta_key, $field, $row_value, $index, $layout );
-				$index ++;
-			endforeach;
-			?>
-		</div>
+            <?php if ( $layout === 'table' ) : ?>
+                <?php $this->render_repeater_table( $meta_key, $field, $value, $post_id ); ?>
+            <?php else : ?>
+                <?php $this->render_repeater_standard( $meta_key, $field, $value, $post_id, $layout ); ?>
+            <?php endif; ?>
 
-		<!-- Template for JavaScript to clone when adding new rows -->
-		<div class="arraypress-repeater__template" style="display:none;">
-			<?php $this->render_repeater_row( $meta_key, $field, [], '__INDEX__', $layout ); ?>
-		</div>
-		<?php
-	}
+            <button type="button" class="button arraypress-repeater__add">
+                <?php echo esc_html( $button_label ); ?>
+            </button>
+        </div>
+        <?php
+        // Clear parent field context
+        $this->set_parent_field_context( null );
+    }
 
-	/**
-	 * Render table layout repeater
-	 *
-	 * Renders rows as table rows with column headers.
-	 * More compact display for simple repeater structures.
-	 *
-	 * @param string $meta_key The field's meta key.
-	 * @param array  $field    The field configuration array.
-	 * @param array  $value    The current field values (array of rows).
-	 * @param int    $post_id  The post ID.
-	 *
-	 * @return void
-	 */
-	protected function render_repeater_table( string $meta_key, array $field, array $value, int $post_id ): void {
-		$has_rows = ! empty( $value );
-		?>
-		<table class="arraypress-repeater__table widefat">
-			<thead>
-			<tr>
-				<th class="arraypress-repeater__table-handle"></th>
-				<?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
-					$width = isset( $sub_field['width'] )
-						? 'style="width:' . esc_attr( $sub_field['width'] ) . '"'
-						: '';
-					?>
-					<th <?php echo $width; ?>>
-						<?php echo esc_html( $sub_field['label'] ); ?>
-					</th>
-				<?php endforeach; ?>
-				<th class="arraypress-repeater__table-actions"></th>
-			</tr>
-			</thead>
+    /**
+     * Render standard repeater layout (vertical or horizontal)
+     *
+     * Renders rows as collapsible panels with header and content areas.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration array.
+     * @param array  $value    The current field values (array of rows).
+     * @param int    $post_id  The post ID.
+     * @param string $layout   The layout type (vertical or horizontal).
+     *
+     * @return void
+     */
+    protected function render_repeater_standard( string $meta_key, array $field, array $value, int $post_id, string $layout ): void {
+        $collapsed = $field['collapsed'] ?? false;
+        ?>
+        <div class="arraypress-repeater__rows">
+            <?php
+            $index = 0;
+            foreach ( $value as $row_value ) :
+                $this->render_repeater_row( $meta_key, $field, $row_value, $index, $layout );
+                $index ++;
+            endforeach;
+            ?>
+        </div>
 
-			<tbody class="arraypress-repeater__rows">
-			<?php if ( ! $has_rows ) : ?>
-				<tr class="arraypress-repeater__empty-row">
-					<td colspan="<?php echo esc_attr( count( $field['fields'] ) + 2 ); ?>">
-						<?php esc_html_e( 'No items yet. Click the button below to add one.', 'arraypress' ); ?>
-					</td>
-				</tr>
-			<?php endif; ?>
+        <!-- Template for JavaScript to clone when adding new rows -->
+        <div class="arraypress-repeater__template" style="display:none;">
+            <?php $this->render_repeater_row( $meta_key, $field, [], '__INDEX__', $layout ); ?>
+        </div>
+        <?php
+    }
 
-			<?php
-			$index = 0;
-			foreach ( $value as $row_value ) :
-				$this->render_repeater_table_row( $meta_key, $field, $row_value, $index );
-				$index ++;
-			endforeach;
-			?>
-			</tbody>
-		</table>
+    /**
+     * Render table layout repeater
+     *
+     * Renders rows as table rows with column headers.
+     * More compact display for simple repeater structures.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration array.
+     * @param array  $value    The current field values (array of rows).
+     * @param int    $post_id  The post ID.
+     *
+     * @return void
+     */
+    protected function render_repeater_table( string $meta_key, array $field, array $value, int $post_id ): void {
+        $has_rows = ! empty( $value );
+        ?>
+        <table class="arraypress-repeater__table widefat">
+            <thead>
+            <tr>
+                <th class="arraypress-repeater__table-handle"></th>
+                <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
+                    $width = isset( $sub_field['width'] )
+                            ? 'style="width:' . esc_attr( $sub_field['width'] ) . '"'
+                            : '';
+                    ?>
+                    <th <?php echo $width; ?>>
+                        <?php echo esc_html( $sub_field['label'] ); ?>
+                    </th>
+                <?php endforeach; ?>
+                <th class="arraypress-repeater__table-actions"></th>
+            </tr>
+            </thead>
 
-		<!-- Template for JavaScript to clone when adding new rows -->
-		<div class="arraypress-repeater__template" style="display:none;">
-			<table>
-				<tbody>
-				<?php $this->render_repeater_table_row( $meta_key, $field, [], '__INDEX__' ); ?>
-				</tbody>
-			</table>
-		</div>
-		<?php
-	}
+            <tbody class="arraypress-repeater__rows">
+            <?php if ( ! $has_rows ) : ?>
+                <tr class="arraypress-repeater__empty-row">
+                    <td colspan="<?php echo esc_attr( count( $field['fields'] ) + 2 ); ?>">
+                        <?php esc_html_e( 'No items yet. Click the button below to add one.', 'arraypress' ); ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
 
-	/**
-	 * Render a single repeater row (vertical or horizontal layout)
-	 *
-	 * Creates a collapsible panel with drag handle, title, toggle,
-	 * remove button, and field content area.
-	 *
-	 * @param string     $meta_key The field's meta key.
-	 * @param array      $field    The field configuration array.
-	 * @param array      $value    The row values.
-	 * @param int|string $index    The row index (or '__INDEX__' for template).
-	 * @param string     $layout   The layout type (vertical or horizontal).
-	 *
-	 * @return void
-	 */
-	protected function render_repeater_row( string $meta_key, array $field, array $value, $index, string $layout = 'vertical' ): void {
-		$collapsed     = $field['collapsed'] ?? false;
-		$is_horizontal = $layout === 'horizontal';
-		$row_class     = 'arraypress-repeater__row';
+            <?php
+            $index = 0;
+            foreach ( $value as $row_value ) :
+                $this->render_repeater_table_row( $meta_key, $field, $row_value, $index );
+                $index ++;
+            endforeach;
+            ?>
+            </tbody>
+        </table>
 
-		if ( $collapsed ) {
-			$row_class .= ' is-collapsed';
-		}
-		if ( $is_horizontal ) {
-			$row_class .= ' arraypress-repeater__row--horizontal';
-		}
-		?>
-		<div class="<?php echo esc_attr( $row_class ); ?>"
-		     data-index="<?php echo esc_attr( $index ); ?>">
+        <!-- Template for JavaScript to clone when adding new rows -->
+        <div class="arraypress-repeater__template" style="display:none;">
+            <table>
+                <tbody>
+                <?php $this->render_repeater_table_row( $meta_key, $field, [], '__INDEX__' ); ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
 
-			<div class="arraypress-repeater__row-header">
-				<span class="arraypress-repeater__row-handle">☰</span>
-				<span class="arraypress-repeater__row-title">
+    /**
+     * Render a single repeater row (vertical or horizontal layout)
+     *
+     * Creates a collapsible panel with drag handle, title, toggle,
+     * remove button, and field content area.
+     *
+     * @param string     $meta_key The field's meta key.
+     * @param array      $field    The field configuration array.
+     * @param array      $value    The row values.
+     * @param int|string $index    The row index (or '__INDEX__' for template).
+     * @param string     $layout   The layout type (vertical or horizontal).
+     *
+     * @return void
+     */
+    protected function render_repeater_row( string $meta_key, array $field, array $value, $index, string $layout = 'vertical' ): void {
+        $collapsed     = $field['collapsed'] ?? false;
+        $is_horizontal = $layout === 'horizontal';
+        $row_class     = 'arraypress-repeater__row';
+
+        if ( $collapsed ) {
+            $row_class .= ' is-collapsed';
+        }
+        if ( $is_horizontal ) {
+            $row_class .= ' arraypress-repeater__row--horizontal';
+        }
+        ?>
+        <div class="<?php echo esc_attr( $row_class ); ?>"
+             data-index="<?php echo esc_attr( $index ); ?>">
+
+            <div class="arraypress-repeater__row-header">
+                <span class="arraypress-repeater__row-handle">☰</span>
+                <span class="arraypress-repeater__row-title">
                     <?php printf(
-	                    __( 'Item %s', 'arraypress' ),
-	                    is_numeric( $index ) ? $index + 1 : '#'
+                            __( 'Item %s', 'arraypress' ),
+                            is_numeric( $index ) ? $index + 1 : '#'
                     ); ?>
                 </span>
-				<?php if ( ! $is_horizontal ) : ?>
-					<button type="button" class="arraypress-repeater__row-toggle">▼</button>
-				<?php endif; ?>
-				<button type="button" class="arraypress-repeater__row-remove">&times;</button>
-			</div>
+                <?php if ( ! $is_horizontal ) : ?>
+                    <button type="button" class="arraypress-repeater__row-toggle">▼</button>
+                <?php endif; ?>
+                <button type="button" class="arraypress-repeater__row-remove">&times;</button>
+            </div>
 
-			<div class="arraypress-repeater__row-content">
-				<?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
-					$sub_value = $value[ $sub_key ] ?? $sub_field['default'];
-					$sub_name  = $meta_key . '[' . $index . '][' . $sub_key . ']';
-					$width     = isset( $sub_field['width'] )
-						? 'style="width:' . esc_attr( $sub_field['width'] ) . '"'
-						: '';
+            <div class="arraypress-repeater__row-content">
+                <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
+                    $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
+                    $sub_name = $meta_key . '[' . $index . '][' . $sub_key . ']';
+                    $width = isset( $sub_field['width'] )
+                            ? 'style="width:' . esc_attr( $sub_field['width'] ) . '"'
+                            : '';
 
-					// Build conditional attributes for nested field
-					$conditional_class = '';
-					$data_attrs        = '';
-					if ( ! empty( $sub_field['show_when'] ) ) {
-						$conditional_class = ' arraypress-conditional-field';
-						$data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
-					}
-					?>
-					<div class="arraypress-repeater__field<?php echo $conditional_class; ?>"
-					     data-field-key="<?php echo esc_attr( $sub_key ); ?>"
-						<?php echo $width; ?>
-						<?php echo $data_attrs; ?>>
+                    // Build conditional attributes for nested field
+                    $conditional_class = '';
+                    $data_attrs        = '';
+                    if ( ! empty( $sub_field['show_when'] ) ) {
+                        $conditional_class = ' arraypress-conditional-field';
+                        $data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
+                    }
+                    ?>
+                    <div class="arraypress-repeater__field<?php echo $conditional_class; ?>"
+                         data-field-key="<?php echo esc_attr( $sub_key ); ?>"
+                            <?php echo $width; ?>
+                            <?php echo $data_attrs; ?>>
 
-						<?php if ( ! $is_horizontal ) : ?>
-							<label class="arraypress-repeater__field-label">
-								<?php echo esc_html( $sub_field['label'] ); ?>
-							</label>
-						<?php endif; ?>
+                        <?php if ( ! $is_horizontal ) : ?>
+                            <label class="arraypress-repeater__field-label">
+                                <?php echo esc_html( $sub_field['label'] ); ?>
+                            </label>
+                        <?php endif; ?>
 
-						<?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
+                        <?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
 
-						<?php if ( ! empty( $sub_field['description'] ) && ! $is_horizontal ) : ?>
-							<p class="arraypress-field__description">
-								<?php echo esc_html( $sub_field['description'] ); ?>
-							</p>
-						<?php endif; ?>
-					</div>
-				<?php endforeach; ?>
-			</div>
-		</div>
-		<?php
-	}
+                        <?php if ( ! empty( $sub_field['description'] ) && ! $is_horizontal ) : ?>
+                            <p class="arraypress-field__description">
+                                <?php echo esc_html( $sub_field['description'] ); ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php
+    }
 
-	/**
-	 * Render a single table row for repeater
-	 *
-	 * Creates a table row with cells for each field plus
-	 * drag handle and remove button columns.
-	 *
-	 * @param string     $meta_key The field's meta key.
-	 * @param array      $field    The field configuration array.
-	 * @param array      $value    The row values.
-	 * @param int|string $index    The row index (or '__INDEX__' for template).
-	 *
-	 * @return void
-	 */
-	protected function render_repeater_table_row( string $meta_key, array $field, array $value, $index ): void {
-		?>
-		<tr class="arraypress-repeater__row" data-index="<?php echo esc_attr( $index ); ?>">
-			<td class="arraypress-repeater__table-handle">
-				<span class="arraypress-repeater__row-handle">☰</span>
-			</td>
+    /**
+     * Render a single table row for repeater
+     *
+     * Creates a table row with cells for each field plus
+     * drag handle and remove button columns.
+     *
+     * @param string     $meta_key The field's meta key.
+     * @param array      $field    The field configuration array.
+     * @param array      $value    The row values.
+     * @param int|string $index    The row index (or '__INDEX__' for template).
+     *
+     * @return void
+     */
+    protected function render_repeater_table_row( string $meta_key, array $field, array $value, $index ): void {
+        ?>
+        <tr class="arraypress-repeater__row" data-index="<?php echo esc_attr( $index ); ?>">
+            <td class="arraypress-repeater__table-handle">
+                <span class="arraypress-repeater__row-handle">☰</span>
+            </td>
 
-			<?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
-				$sub_value = $value[ $sub_key ] ?? $sub_field['default'];
-				$sub_name  = $meta_key . '[' . $index . '][' . $sub_key . ']';
+            <?php foreach ( $field['fields'] as $sub_key => $sub_field ) :
+                $sub_value = $value[ $sub_key ] ?? $sub_field['default'];
+                $sub_name = $meta_key . '[' . $index . '][' . $sub_key . ']';
 
-				// Build conditional attributes for nested field
-				$conditional_class = '';
-				$data_attrs        = '';
-				if ( ! empty( $sub_field['show_when'] ) ) {
-					$conditional_class = ' arraypress-conditional-field';
-					$data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
-				}
-				?>
-				<td class="arraypress-repeater__field<?php echo $conditional_class; ?>"
-				    data-field-key="<?php echo esc_attr( $sub_key ); ?>"
-					<?php echo $data_attrs; ?>>
-					<?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
-				</td>
-			<?php endforeach; ?>
+                // Build conditional attributes for nested field
+                $conditional_class = '';
+                $data_attrs        = '';
+                if ( ! empty( $sub_field['show_when'] ) ) {
+                    $conditional_class = ' arraypress-conditional-field';
+                    $data_attrs        = $this->get_conditional_attributes( $sub_field, $sub_key );
+                }
+                ?>
+                <td class="arraypress-repeater__field<?php echo $conditional_class; ?>"
+                    data-field-key="<?php echo esc_attr( $sub_key ); ?>"
+                        <?php echo $data_attrs; ?>>
+                    <?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
+                </td>
+            <?php endforeach; ?>
 
-			<td class="arraypress-repeater__table-actions">
-				<button type="button" class="arraypress-repeater__row-remove">&times;</button>
-			</td>
-		</tr>
-		<?php
-	}
+            <td class="arraypress-repeater__table-actions">
+                <button type="button" class="arraypress-repeater__row-remove">&times;</button>
+            </td>
+        </tr>
+        <?php
+    }
 
 }

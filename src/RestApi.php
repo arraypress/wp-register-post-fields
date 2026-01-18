@@ -79,7 +79,7 @@ class RestApi {
 				'field_key'  => [
 					'required'          => true,
 					'type'              => 'string',
-					'sanitize_callback' => 'sanitize_key',
+					'sanitize_callback' => [ __CLASS__, 'sanitize_field_key' ],
 				],
 				'search'     => [
 					'type'              => 'string',
@@ -93,6 +93,22 @@ class RestApi {
 				],
 			],
 		] );
+	}
+
+	/**
+	 * Sanitize field key that may contain dots for nested paths.
+	 *
+	 * @param string $value The field key value.
+	 *
+	 * @return string Sanitized field key.
+	 */
+	public static function sanitize_field_key( string $value ): string {
+		// Allow dots for nested field paths (e.g., "resources.resource_person")
+		// Sanitize each part separately
+		$parts = explode( '.', $value );
+		$parts = array_map( 'sanitize_key', $parts );
+
+		return implode( '.', $parts );
 	}
 
 	/**
@@ -124,8 +140,8 @@ class RestApi {
 		$search     = $request->get_param( 'search' );
 		$include    = $request->get_param( 'include' );
 
-		// Get the field configuration
-		$field = PostFields::get_field_config( $metabox_id, $field_key );
+		// Get the field configuration - handle nested field paths
+		$field = $this->get_field_config( $metabox_id, $field_key );
 
 		if ( ! $field ) {
 			return new WP_Error(
@@ -189,6 +205,45 @@ class RestApi {
 				[ 'status' => 500 ]
 			);
 		}
+	}
+
+	/**
+	 * Get field configuration, supporting nested field paths.
+	 *
+	 * Field key can be:
+	 * - Simple: "field_name"
+	 * - Nested: "parent_field.child_field" (for fields inside repeaters/groups)
+	 *
+	 * @param string $metabox_id The metabox ID.
+	 * @param string $field_key  The field key (may include dot notation for nesting).
+	 *
+	 * @return array|null The field configuration or null if not found.
+	 */
+	protected function get_field_config( string $metabox_id, string $field_key ): ?array {
+		// Check if this is a nested field path (contains a dot)
+		if ( strpos( $field_key, '.' ) !== false ) {
+			$parts      = explode( '.', $field_key );
+			$parent_key = $parts[0];
+			$child_key  = $parts[1];
+
+			// Get the parent field (repeater or group)
+			$parent_field = PostFields::get_field_config( $metabox_id, $parent_key );
+
+			if ( ! $parent_field ) {
+				return null;
+			}
+
+			// Check if parent has nested fields
+			if ( ! isset( $parent_field['fields'] ) || ! is_array( $parent_field['fields'] ) ) {
+				return null;
+			}
+
+			// Return the nested field config
+			return $parent_field['fields'][ $child_key ] ?? null;
+		}
+
+		// Simple field path - use existing method
+		return PostFields::get_field_config( $metabox_id, $field_key );
 	}
 
 	/**

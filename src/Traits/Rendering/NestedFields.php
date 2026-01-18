@@ -38,9 +38,28 @@ namespace ArrayPress\RegisterPostFields\Traits\Rendering;
  * Note: WYSIWYG, gallery, and complex nested fields (group, repeater)
  * are not supported in nested contexts.
  *
- * @package ArrayPress\RegisterPostFields\Traits\Rendering
+ * @package ArrayPress\RegisterPostFields\Traits
  */
 trait NestedFields {
+
+	/**
+	 * The current parent field key when rendering nested fields.
+	 * Used to pass context for AJAX fields inside repeaters/groups.
+	 *
+	 * @var string|null
+	 */
+	protected ?string $current_parent_field = null;
+
+	/**
+	 * Set the current parent field context
+	 *
+	 * @param string|null $parent_key The parent field key or null to clear.
+	 *
+	 * @return void
+	 */
+	protected function set_parent_field_context( ?string $parent_key ): void {
+		$this->current_parent_field = $parent_key;
+	}
 
 	/**
 	 * Render a nested field input
@@ -128,10 +147,10 @@ trait NestedFields {
 			? ' placeholder="' . esc_attr( $field['placeholder'] ) . '"'
 			: '';
 		?>
-		<input type="<?php echo esc_attr( $input_type ); ?>"
-		       name="<?php echo esc_attr( $name ); ?>"
-		       value="<?php echo esc_attr( $value ); ?>"
-		       class="regular-text"
+        <input type="<?php echo esc_attr( $input_type ); ?>"
+               name="<?php echo esc_attr( $name ); ?>"
+               value="<?php echo esc_attr( $value ); ?>"
+               class="regular-text"
 			<?php echo $placeholder; ?> />
 		<?php
 	}
@@ -151,9 +170,9 @@ trait NestedFields {
 			? ' placeholder="' . esc_attr( $field['placeholder'] ) . '"'
 			: '';
 		?>
-		<textarea name="<?php echo esc_attr( $name ); ?>"
-		          rows="<?php echo $rows; ?>"
-		          class="large-text"
+        <textarea name="<?php echo esc_attr( $name ); ?>"
+                  rows="<?php echo $rows; ?>"
+                  class="large-text"
             <?php echo $placeholder; ?>><?php echo esc_textarea( $value ); ?></textarea>
 		<?php
 	}
@@ -175,10 +194,10 @@ trait NestedFields {
 			? ' placeholder="' . esc_attr( $field['placeholder'] ) . '"'
 			: '';
 		?>
-		<input type="number"
-		       name="<?php echo esc_attr( $name ); ?>"
-		       value="<?php echo esc_attr( $value ); ?>"
-		       class="small-text"
+        <input type="number"
+               name="<?php echo esc_attr( $name ); ?>"
+               value="<?php echo esc_attr( $value ); ?>"
+               class="small-text"
 			<?php echo $min . $max . $step . $placeholder; ?> />
 		<?php
 	}
@@ -195,14 +214,14 @@ trait NestedFields {
 	protected function render_nested_select( string $name, array $field, $value ): void {
 		$options = $this->get_options( $field['options'] );
 		?>
-		<select name="<?php echo esc_attr( $name ); ?>">
+        <select name="<?php echo esc_attr( $name ); ?>">
 			<?php foreach ( $options as $option_value => $option_label ) : ?>
-				<option value="<?php echo esc_attr( $option_value ); ?>"
+                <option value="<?php echo esc_attr( $option_value ); ?>"
 					<?php selected( $value, $option_value ); ?>>
 					<?php echo esc_html( $option_label ); ?>
-				</option>
+                </option>
 			<?php endforeach; ?>
-		</select>
+        </select>
 		<?php
 	}
 
@@ -218,13 +237,13 @@ trait NestedFields {
 	protected function render_nested_checkbox( string $name, array $field, $value ): void {
 		$checked = ! empty( $value );
 		?>
-		<label>
-			<input type="checkbox"
-			       name="<?php echo esc_attr( $name ); ?>"
-			       value="1"
+        <label>
+            <input type="checkbox"
+                   name="<?php echo esc_attr( $name ); ?>"
+                   value="1"
 				<?php checked( $checked ); ?> />
 			<?php echo esc_html( $field['label'] ); ?>
-		</label>
+        </label>
 		<?php
 	}
 
@@ -241,19 +260,19 @@ trait NestedFields {
 		$options = $this->get_options( $field['options'] );
 		$layout  = $field['layout'] ?? 'vertical';
 		?>
-		<div class="arraypress-radio-group arraypress-radio-group--<?php echo esc_attr( $layout ); ?>">
+        <div class="arraypress-radio-group arraypress-radio-group--<?php echo esc_attr( $layout ); ?>">
 			<?php foreach ( $options as $option_value => $option_label ) : ?>
-				<label class="arraypress-radio-item">
-					<input type="radio"
-					       name="<?php echo esc_attr( $name ); ?>"
-					       value="<?php echo esc_attr( $option_value ); ?>"
+                <label class="arraypress-radio-item">
+                    <input type="radio"
+                           name="<?php echo esc_attr( $name ); ?>"
+                           value="<?php echo esc_attr( $option_value ); ?>"
 						<?php checked( $value, $option_value ); ?> />
-					<span class="arraypress-radio-label">
+                    <span class="arraypress-radio-label">
                         <?php echo esc_html( $option_label ); ?>
                     </span>
-				</label>
+                </label>
 			<?php endforeach; ?>
-		</div>
+        </div>
 		<?php
 	}
 
@@ -273,22 +292,22 @@ trait NestedFields {
 		$values    = $multiple ? (array) $value : [ $value ];
 		$type      = $multiple ? 'checkbox' : 'radio';
 		?>
-		<div class="arraypress-button-group<?php echo $multiple ? ' arraypress-button-group--multiple' : ''; ?>">
+        <div class="arraypress-button-group<?php echo $multiple ? ' arraypress-button-group--multiple' : ''; ?>">
 			<?php foreach ( $options as $option_value => $option_label ) :
 				$is_selected = in_array( $option_value, $values, false );
 				?>
-				<label class="arraypress-button-group__item<?php echo $is_selected ? ' is-selected' : ''; ?>">
-					<input type="<?php echo esc_attr( $type ); ?>"
-					       name="<?php echo esc_attr( $name_attr ); ?>"
-					       value="<?php echo esc_attr( $option_value ); ?>"
+                <label class="arraypress-button-group__item<?php echo $is_selected ? ' is-selected' : ''; ?>">
+                    <input type="<?php echo esc_attr( $type ); ?>"
+                           name="<?php echo esc_attr( $name_attr ); ?>"
+                           value="<?php echo esc_attr( $option_value ); ?>"
 						<?php checked( $is_selected ); ?>
-						   class="arraypress-button-group__input" />
-					<span class="arraypress-button-group__label">
+                           class="arraypress-button-group__input"/>
+                    <span class="arraypress-button-group__label">
                         <?php echo esc_html( $option_label ); ?>
                     </span>
-				</label>
+                </label>
 			<?php endforeach; ?>
-		</div>
+        </div>
 		<?php
 	}
 
@@ -308,18 +327,18 @@ trait NestedFields {
 		$range_value = $value !== '' ? $value : ( $field['default'] ?? $min );
 		$unit        = $field['unit'] ?? '';
 		?>
-		<div class="arraypress-range-field" data-unit="<?php echo esc_attr( $unit ); ?>">
-			<input type="range"
-			       name="<?php echo esc_attr( $name ); ?>"
-			       value="<?php echo esc_attr( $range_value ); ?>"
-			       min="<?php echo esc_attr( $min ); ?>"
-			       max="<?php echo esc_attr( $max ); ?>"
-			       step="<?php echo esc_attr( $step ); ?>"
-			       class="arraypress-range-input" />
-			<output class="arraypress-range-output">
+        <div class="arraypress-range-field" data-unit="<?php echo esc_attr( $unit ); ?>">
+            <input type="range"
+                   name="<?php echo esc_attr( $name ); ?>"
+                   value="<?php echo esc_attr( $range_value ); ?>"
+                   min="<?php echo esc_attr( $min ); ?>"
+                   max="<?php echo esc_attr( $max ); ?>"
+                   step="<?php echo esc_attr( $step ); ?>"
+                   class="arraypress-range-input"/>
+            <output class="arraypress-range-output">
 				<?php echo esc_html( $range_value . $unit ); ?>
-			</output>
-		</div>
+            </output>
+        </div>
 		<?php
 	}
 
@@ -335,28 +354,28 @@ trait NestedFields {
 	protected function render_nested_image( string $name, array $field, $value ): void {
 		$image_url = $value ? wp_get_attachment_image_url( $value, 'thumbnail' ) : '';
 		?>
-		<div class="arraypress-media-field arraypress-image-field" data-type="image">
-			<input type="hidden"
-			       name="<?php echo esc_attr( $name ); ?>"
-			       value="<?php echo esc_attr( $value ); ?>"
-			       class="arraypress-media-input" />
+        <div class="arraypress-media-field arraypress-image-field" data-type="image">
+            <input type="hidden"
+                   name="<?php echo esc_attr( $name ); ?>"
+                   value="<?php echo esc_attr( $value ); ?>"
+                   class="arraypress-media-input"/>
 
-			<div class="arraypress-media-preview">
+            <div class="arraypress-media-preview">
 				<?php if ( $image_url ) : ?>
-					<img src="<?php echo esc_url( $image_url ); ?>" alt="" />
+                    <img src="<?php echo esc_url( $image_url ); ?>" alt=""/>
 				<?php endif; ?>
-			</div>
+            </div>
 
-			<button type="button" class="button arraypress-media-select">
+            <button type="button" class="button arraypress-media-select">
 				<?php esc_html_e( 'Select Image', 'arraypress' ); ?>
-			</button>
+            </button>
 
-			<button type="button"
-			        class="button arraypress-media-remove"
+            <button type="button"
+                    class="button arraypress-media-remove"
 				<?php echo ! $value ? 'style="display:none;"' : ''; ?>>
 				<?php esc_html_e( 'Remove', 'arraypress' ); ?>
-			</button>
-		</div>
+            </button>
+        </div>
 		<?php
 	}
 
@@ -373,30 +392,30 @@ trait NestedFields {
 		$file_url  = $value ? wp_get_attachment_url( $value ) : '';
 		$file_name = $value ? basename( get_attached_file( $value ) ) : '';
 		?>
-		<div class="arraypress-media-field arraypress-file-field" data-type="file">
-			<input type="hidden"
-			       name="<?php echo esc_attr( $name ); ?>"
-			       value="<?php echo esc_attr( $value ); ?>"
-			       class="arraypress-media-input" />
+        <div class="arraypress-media-field arraypress-file-field" data-type="file">
+            <input type="hidden"
+                   name="<?php echo esc_attr( $name ); ?>"
+                   value="<?php echo esc_attr( $value ); ?>"
+                   class="arraypress-media-input"/>
 
-			<div class="arraypress-file-preview">
+            <div class="arraypress-file-preview">
 				<?php if ( $file_name ) : ?>
-					<a href="<?php echo esc_url( $file_url ); ?>" target="_blank">
+                    <a href="<?php echo esc_url( $file_url ); ?>" target="_blank">
 						<?php echo esc_html( $file_name ); ?>
-					</a>
+                    </a>
 				<?php endif; ?>
-			</div>
+            </div>
 
-			<button type="button" class="button arraypress-media-select">
+            <button type="button" class="button arraypress-media-select">
 				<?php esc_html_e( 'Select File', 'arraypress' ); ?>
-			</button>
+            </button>
 
-			<button type="button"
-			        class="button arraypress-media-remove"
+            <button type="button"
+                    class="button arraypress-media-remove"
 				<?php echo ! $value ? 'style="display:none;"' : ''; ?>>
 				<?php esc_html_e( 'Remove', 'arraypress' ); ?>
-			</button>
-		</div>
+            </button>
+        </div>
 		<?php
 	}
 
@@ -419,19 +438,26 @@ trait NestedFields {
 
 		// Get metabox ID from the instance property
 		$metabox_id = $this->id;
+
+		// Build the full field key path for nested fields
+		// If we have a parent field context (repeater/group), include it
+		$field_key_path = $key;
+		if ( ! empty( $this->current_parent_field ) ) {
+			$field_key_path = $this->current_parent_field . '.' . $key;
+		}
 		?>
-		<select class="arraypress-ajax-select<?php echo $multiple ? ' multiple' : ''; ?>"
-		        name="<?php echo esc_attr( $name_attr ); ?>"
+        <select class="arraypress-ajax-select<?php echo $multiple ? ' multiple' : ''; ?>"
+                name="<?php echo esc_attr( $name_attr ); ?>"
 			<?php echo $multiple ? 'multiple' : ''; ?>
-			    data-metabox-id="<?php echo esc_attr( $metabox_id ); ?>"
-			    data-field-key="<?php echo esc_attr( $key ); ?>"
-			    data-placeholder="<?php echo esc_attr( $placeholder ); ?>">
+                data-metabox-id="<?php echo esc_attr( $metabox_id ); ?>"
+                data-field-key="<?php echo esc_attr( $field_key_path ); ?>"
+                data-placeholder="<?php echo esc_attr( $placeholder ); ?>">
 			<?php foreach ( $values as $val ) : ?>
-				<option value="<?php echo esc_attr( $val ); ?>" selected>
+                <option value="<?php echo esc_attr( $val ); ?>" selected>
 					<?php echo esc_html( $val ); ?>
-				</option>
+                </option>
 			<?php endforeach; ?>
-		</select>
+        </select>
 		<?php
 	}
 
@@ -447,11 +473,11 @@ trait NestedFields {
 	protected function render_nested_tel( string $name, array $field, $value ): void {
 		$placeholder = $field['placeholder'] ?? '';
 		?>
-		<input type="tel"
-		       name="<?php echo esc_attr( $name ); ?>"
-		       value="<?php echo esc_attr( $value ); ?>"
-		       class="regular-text"
-		       placeholder="<?php echo esc_attr( $placeholder ); ?>" />
+        <input type="tel"
+               name="<?php echo esc_attr( $name ); ?>"
+               value="<?php echo esc_attr( $value ); ?>"
+               class="regular-text"
+               placeholder="<?php echo esc_attr( $placeholder ); ?>"/>
 		<?php
 	}
 

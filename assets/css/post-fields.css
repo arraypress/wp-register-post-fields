@@ -574,6 +574,15 @@
     visibility: visible !important;
 }
 
+/* Empty state for table repeater */
+.arraypress-repeater__empty-row td {
+    text-align: center;
+    padding: 20px;
+    color: #646970;
+    font-style: italic;
+    background: #f9f9f9;
+}
+
 /* ==========================================================================
    SELECT2 ADJUSTMENTS
    ========================================================================== */

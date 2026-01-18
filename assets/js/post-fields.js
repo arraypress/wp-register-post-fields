@@ -215,18 +215,18 @@
         /**
          * Initialize repeater fields
          */
-        initRepeaterFields: function() {
+        initRepeaterFields: function () {
             var self = this;
 
             // Add row
-            $(document).on('click', '.arraypress-repeater__add', function(e) {
+            $(document).on('click', '.arraypress-repeater__add', function (e) {
                 e.preventDefault();
                 var $repeater = $(this).closest('.arraypress-repeater');
                 self.addRepeaterRow($repeater);
             });
 
             // Remove row
-            $(document).on('click', '.arraypress-repeater__row-remove', function(e) {
+            $(document).on('click', '.arraypress-repeater__row-remove', function (e) {
                 e.preventDefault();
                 var $repeater = $(this).closest('.arraypress-repeater');
                 var $row = $(this).closest('.arraypress-repeater__row');
@@ -234,7 +234,7 @@
             });
 
             // Toggle row collapse (only for vertical layout)
-            $(document).on('click', '.arraypress-repeater__row-toggle', function(e) {
+            $(document).on('click', '.arraypress-repeater__row-toggle', function (e) {
                 e.preventDefault();
                 $(this).closest('.arraypress-repeater__row').toggleClass('is-collapsed');
             });
@@ -245,7 +245,7 @@
                 items: '.arraypress-repeater__row',
                 cursor: 'move',
                 placeholder: 'arraypress-repeater__row ui-sortable-placeholder',
-                update: function(event, ui) {
+                update: function (event, ui) {
                     var $repeater = $(this).closest('.arraypress-repeater');
                     self.updateRepeaterIndexes($repeater);
                 }
@@ -257,15 +257,15 @@
                 items: 'tr.arraypress-repeater__row',
                 cursor: 'move',
                 placeholder: 'ui-sortable-placeholder',
-                helper: function(e, tr) {
+                helper: function (e, tr) {
                     var $originals = tr.children();
                     var $helper = tr.clone();
-                    $helper.children().each(function(index) {
+                    $helper.children().each(function (index) {
                         $(this).width($originals.eq(index).width());
                     });
                     return $helper;
                 },
-                update: function(event, ui) {
+                update: function (event, ui) {
                     var $repeater = $(this).closest('.arraypress-repeater');
                     self.updateRepeaterIndexes($repeater);
                 }
@@ -277,7 +277,7 @@
          *
          * @param {jQuery} $repeater The repeater container
          */
-        addRepeaterRow: function($repeater) {
+        addRepeaterRow: function ($repeater) {
             var self = this;
             var layout = $repeater.data('layout') || 'vertical';
             var $template = $repeater.find('.arraypress-repeater__template');
@@ -309,7 +309,7 @@
             }
 
             // Replace placeholder index with actual index
-            $newRow.find('[name]').each(function() {
+            $newRow.find('[name]').each(function () {
                 var name = $(this).attr('name');
                 $(this).attr('name', name.replace('__INDEX__', newIndex));
             });
@@ -319,6 +319,9 @@
             // Update title for non-table layouts
             $newRow.find('.arraypress-repeater__row-title').text('Item ' + (newIndex + 1));
 
+            // Hide empty state row if present (table layout)
+            $repeater.find('.arraypress-repeater__empty-row').hide();
+
             $rows.append($newRow);
             this.updateRepeaterIndexes($repeater);
 
@@ -326,12 +329,12 @@
             $newRow.find('.arraypress-color-picker').wpColorPicker();
 
             // Initialize ajax selects in new row
-            $newRow.find('.arraypress-ajax-select').each(function() {
+            $newRow.find('.arraypress-ajax-select').each(function () {
                 self.initSingleAjaxSelect($(this));
             });
 
             // Initialize button groups state
-            $newRow.find('.arraypress-button-group__input').each(function() {
+            $newRow.find('.arraypress-button-group__input').each(function () {
                 var $input = $(this);
                 $input.closest('.arraypress-button-group__item').toggleClass('is-selected', $input.is(':checked'));
             });
@@ -347,8 +350,17 @@
          * @param {jQuery} $row      The row to remove
          */
         removeRepeaterRow: function ($repeater, $row) {
-            var $rows = $repeater.find('.arraypress-repeater__rows');
+            var layout = $repeater.data('layout') || 'vertical';
             var min = parseInt($repeater.data('min')) || 0;
+
+            // Get rows container based on layout
+            var $rows;
+            if (layout === 'table') {
+                $rows = $repeater.find('.arraypress-repeater__table tbody');
+            } else {
+                $rows = $repeater.find('.arraypress-repeater__rows');
+            }
+
             var currentCount = $rows.find('.arraypress-repeater__row').length;
 
             if (min > 0 && currentCount <= min) {
@@ -361,6 +373,11 @@
 
             $row.remove();
             this.updateRepeaterIndexes($repeater);
+
+            // Show empty state row if no rows remain (table layout)
+            if ($rows.find('.arraypress-repeater__row').length === 0) {
+                $repeater.find('.arraypress-repeater__empty-row').show();
+            }
         },
 
         /**
@@ -368,7 +385,7 @@
          *
          * @param {jQuery} $repeater The repeater container
          */
-        updateRepeaterIndexes: function($repeater) {
+        updateRepeaterIndexes: function ($repeater) {
             var layout = $repeater.data('layout') || 'vertical';
             var metaKey = $repeater.data('meta-key');
 
@@ -380,12 +397,12 @@
                 $rows = $repeater.find('.arraypress-repeater__rows .arraypress-repeater__row');
             }
 
-            $rows.each(function(index) {
+            $rows.each(function (index) {
                 var $row = $(this);
                 $row.attr('data-index', index);
                 $row.find('.arraypress-repeater__row-title').text('Item ' + (index + 1));
 
-                $row.find('[name]').each(function() {
+                $row.find('[name]').each(function () {
                     var name = $(this).attr('name');
                     var newName = name.replace(/\[\d+\]/, '[' + index + ']');
                     $(this).attr('name', newName);
@@ -429,9 +446,9 @@
         /**
          * Initialize button group fields
          */
-        initButtonGroups: function() {
+        initButtonGroups: function () {
             // Handle button group clicks with event delegation
-            $(document).on('change', '.arraypress-button-group__input', function() {
+            $(document).on('change', '.arraypress-button-group__input', function () {
                 var $input = $(this);
                 var $group = $input.closest('.arraypress-button-group');
                 var isMultiple = $group.hasClass('arraypress-button-group--multiple');
@@ -450,9 +467,9 @@
         /**
          * Initialize range slider fields
          */
-        initRangeSliders: function() {
+        initRangeSliders: function () {
             // Update output on input
-            $(document).on('input', '.arraypress-range-input', function() {
+            $(document).on('input', '.arraypress-range-input', function () {
                 var $input = $(this);
                 var $output = $input.siblings('.arraypress-range-output');
                 var $field = $input.closest('.arraypress-range-field');

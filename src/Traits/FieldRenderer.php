@@ -792,6 +792,7 @@ trait FieldRenderer {
      * @return void
      */
     protected function render_repeater_table( string $meta_key, array $field, array $value, int $post_id ): void {
+        $has_rows = ! empty( $value );
         ?>
         <table class="arraypress-repeater__table widefat">
             <thead>
@@ -806,6 +807,13 @@ trait FieldRenderer {
             </tr>
             </thead>
             <tbody class="arraypress-repeater__rows">
+            <?php if ( ! $has_rows ) : ?>
+                <tr class="arraypress-repeater__empty-row">
+                    <td colspan="<?php echo esc_attr( count( $field['fields'] ) + 2 ); ?>">
+                        <?php esc_html_e( 'No items yet. Click the button below to add one.', 'arraypress' ); ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
             <?php
             $index = 0;
             foreach ( $value as $row_value ) :
@@ -815,14 +823,7 @@ trait FieldRenderer {
             ?>
             </tbody>
         </table>
-
-        <div class="arraypress-repeater__template" style="display:none;">
-            <table>
-                <tbody>
-                <?php $this->render_repeater_table_row( $meta_key, $field, [], '__INDEX__' ); ?>
-                </tbody>
-            </table>
-        </div>
+        <!-- template unchanged -->
         <?php
     }
 

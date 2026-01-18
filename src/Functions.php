@@ -8,7 +8,7 @@
  * @package     ArrayPress\WP\RegisterPostFields
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     2.0.0
  * @author      David Sherlock
  */
 
@@ -73,78 +73,24 @@ if ( ! function_exists( 'register_post_fields' ) ) {
 	 * ] );
 	 *
 	 * @example
-	 * // Register with image and gallery fields
-	 * register_post_fields( 'product_gallery', [
-	 *     'title'      => 'Product Gallery',
-	 *     'post_types' => 'product',
-	 *     'context'    => 'side',
-	 *     'fields'     => [
-	 *         'featured' => [
-	 *             'label' => 'Featured Image',
-	 *             'type'  => 'image',
-	 *         ],
-	 *         'gallery' => [
-	 *             'label'     => 'Gallery Images',
-	 *             'type'      => 'gallery',
-	 *             'max_items' => 10,
-	 *         ],
-	 *     ],
-	 * ] );
-	 *
-	 * @example
-	 * // Register with repeater field
-	 * register_post_fields( 'product_features', [
-	 *     'title'      => 'Product Features',
+	 * // Register with conditional fields
+	 * register_post_fields( 'shipping_options', [
+	 *     'title'      => 'Shipping Options',
 	 *     'post_types' => 'product',
 	 *     'fields'     => [
-	 *         'features' => [
-	 *             'label'        => 'Features',
-	 *             'type'         => 'repeater',
-	 *             'button_label' => 'Add Feature',
-	 *             'max_items'    => 10,
-	 *             'fields'       => [
-	 *                 'icon' => [
-	 *                     'label'       => 'Icon',
-	 *                     'type'        => 'text',
-	 *                     'placeholder' => 'dashicons-star-filled',
-	 *                 ],
-	 *                 'title' => [
-	 *                     'label' => 'Title',
-	 *                     'type'  => 'text',
-	 *                 ],
-	 *                 'description' => [
-	 *                     'label' => 'Description',
-	 *                     'type'  => 'textarea',
-	 *                     'rows'  => 2,
-	 *                 ],
-	 *             ],
+	 *         'is_physical' => [
+	 *             'label' => 'Physical Product',
+	 *             'type'  => 'checkbox',
 	 *         ],
-	 *     ],
-	 * ] );
-	 *
-	 * @example
-	 * // Register with relational fields
-	 * register_post_fields( 'related_content', [
-	 *     'title'      => 'Related Content',
-	 *     'post_types' => [ 'post', 'page' ],
-	 *     'fields'     => [
-	 *         'related_posts' => [
-	 *             'label'     => 'Related Posts',
-	 *             'type'      => 'post',
-	 *             'post_type' => 'post',
-	 *             'multiple'  => true,
-	 *             'display'   => 'checkbox',
+	 *         'weight' => [
+	 *             'label'     => 'Weight (kg)',
+	 *             'type'      => 'number',
+	 *             'show_when' => [ 'is_physical' => 1 ],
 	 *         ],
-	 *         'author' => [
-	 *             'label' => 'Content Author',
-	 *             'type'  => 'user',
-	 *             'role'  => [ 'author', 'editor' ],
-	 *         ],
-	 *         'categories' => [
-	 *             'label'    => 'Categories',
-	 *             'type'     => 'term',
-	 *             'taxonomy' => 'category',
-	 *             'multiple' => true,
+	 *         'dimensions' => [
+	 *             'label'     => 'Dimensions',
+	 *             'type'      => 'text',
+	 *             'show_when' => [ 'is_physical' => 1 ],
 	 *         ],
 	 *     ],
 	 * ] );

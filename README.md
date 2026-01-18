@@ -1,10 +1,11 @@
-# WordPress Register Post Metabox
+# WordPress Register Post Fields
 
 A lightweight library for registering custom metaboxes with fields on WordPress post edit screens. This library provides a clean, simple API for adding common field types to any post type without complex configuration.
 
 ## Features
 
 - **Simple API**: Register custom metaboxes with minimal code
+- **Conditional Logic**: Show/hide fields based on other field values with `show_when`
 - **Multiple Field Types**: Text, textarea, WYSIWYG, number, select, checkbox, URL, email, color, date/time, image, file, gallery, and relational fields
 - **Repeater Fields**: Dynamic repeatable field groups with drag-and-drop reordering
 - **Group Fields**: Static groups of related fields
@@ -16,7 +17,7 @@ A lightweight library for registering custom metaboxes with fields on WordPress 
 - **Permission Control**: Control field visibility based on user capabilities
 - **Meta Key Prefixing**: Optional automatic prefixing of meta keys
 - **Media Library Integration**: Native WordPress media picker for image, file, and gallery fields
-- **Lightweight**: Minimal JavaScript, leverages WordPress built-in functionality
+- **Lightweight**: External CSS/JS assets, leverages WordPress built-in functionality
 
 ## Requirements
 
@@ -28,7 +29,7 @@ A lightweight library for registering custom metaboxes with fields on WordPress 
 Install via Composer:
 
 ```bash
-composer require arraypress/wp-register-post-metabox
+composer require arraypress/wp-register-post-fields
 ```
 
 ## Basic Usage
@@ -36,7 +37,7 @@ composer require arraypress/wp-register-post-metabox
 ### Simple Metabox with Text Fields
 
 ```php
-register_post_metabox( 'product_info', [
+register_post_fields( 'product_info', [
     'title'      => __( 'Product Information', 'textdomain' ),
     'post_types' => 'product',
     'fields'     => [
@@ -55,38 +56,167 @@ register_post_metabox( 'product_info', [
 ] );
 ```
 
-### Multiple Post Types
+## Conditional Logic (show_when)
+
+Fields can be shown or hidden based on the values of other fields. This is perfect for creating dynamic forms where certain options only appear when relevant.
+
+### Simple Shorthand Syntax
 
 ```php
-register_post_metabox( 'seo_settings', [
-    'title'      => __( 'SEO Settings', 'textdomain' ),
-    'post_types' => [ 'post', 'page', 'product' ],
+'custom_url' => [
+    'label'     => __( 'Custom URL', 'textdomain' ),
+    'type'      => 'url',
+    'show_when' => [ 'use_external_link' => 1 ],
+],
+```
+
+### Explicit Syntax with Operators
+
+```php
+'discount_code' => [
+    'label'     => __( 'Discount Code', 'textdomain' ),
+    'type'      => 'text',
+    'show_when' => [
+        'field'    => 'enable_discount',
+        'operator' => '==',
+        'value'    => 1,
+    ],
+],
+```
+
+### Multiple Conditions (AND Logic)
+
+All conditions must be true for the field to show:
+
+```php
+'shipping_notes' => [
+    'label'     => __( 'Shipping Notes', 'textdomain' ),
+    'type'      => 'textarea',
+    'show_when' => [
+        [ 'field' => 'product_type', 'value' => 'physical' ],
+        [ 'field' => 'requires_shipping', 'value' => 1 ],
+    ],
+],
+```
+
+### Available Operators
+
+| Operator | Description |
+|----------|-------------|
+| `==` or `=` | Equal (loose comparison) |
+| `===` | Strictly equal |
+| `!=` or `<>` | Not equal |
+| `!==` | Strictly not equal |
+| `>` | Greater than |
+| `>=` | Greater than or equal |
+| `<` | Less than |
+| `<=` | Less than or equal |
+| `in` | Value is in array |
+| `not_in` | Value is not in array |
+| `contains` | String contains |
+| `not_contains` | String does not contain |
+| `empty` | Value is empty |
+| `not_empty` | Value is not empty |
+
+### Complete Conditional Example
+
+```php
+register_post_fields( 'product_options', [
+    'title'      => __( 'Product Options', 'textdomain' ),
+    'post_types' => 'product',
     'fields'     => [
-        'meta_title' => [
-            'label' => __( 'Meta Title', 'textdomain' ),
-            'type'  => 'text',
+        'product_type' => [
+            'label'   => __( 'Product Type', 'textdomain' ),
+            'type'    => 'select',
+            'options' => [
+                'physical' => __( 'Physical Product', 'textdomain' ),
+                'digital'  => __( 'Digital Product', 'textdomain' ),
+                'service'  => __( 'Service', 'textdomain' ),
+            ],
         ],
-        'meta_description' => [
-            'label' => __( 'Meta Description', 'textdomain' ),
-            'type'  => 'textarea',
-            'rows'  => 3,
+        // Only show for physical products
+        'weight' => [
+            'label'     => __( 'Weight (kg)', 'textdomain' ),
+            'type'      => 'number',
+            'step'      => 0.01,
+            'show_when' => [ 'product_type' => 'physical' ],
+        ],
+        'dimensions' => [
+            'label'     => __( 'Dimensions', 'textdomain' ),
+            'type'      => 'group',
+            'show_when' => [ 'product_type' => 'physical' ],
+            'fields'    => [
+                'width'  => [ 'label' => 'Width', 'type' => 'number' ],
+                'height' => [ 'label' => 'Height', 'type' => 'number' ],
+                'depth'  => [ 'label' => 'Depth', 'type' => 'number' ],
+            ],
+        ],
+        // Only show for digital products
+        'download_file' => [
+            'label'     => __( 'Download File', 'textdomain' ),
+            'type'      => 'file',
+            'show_when' => [ 'product_type' => 'digital' ],
+        ],
+        'download_limit' => [
+            'label'     => __( 'Download Limit', 'textdomain' ),
+            'type'      => 'number',
+            'show_when' => [ 'product_type' => 'digital' ],
+        ],
+        // Only show for services
+        'duration' => [
+            'label'     => __( 'Duration (hours)', 'textdomain' ),
+            'type'      => 'number',
+            'show_when' => [ 'product_type' => 'service' ],
         ],
     ],
 ] );
 ```
 
-### Sidebar Metabox
+### Conditional Fields in Repeaters
+
+Conditional logic also works within repeater fields:
 
 ```php
-register_post_metabox( 'post_settings', [
-    'title'      => __( 'Post Settings', 'textdomain' ),
-    'post_types' => 'post',
-    'context'    => 'side',
-    'priority'   => 'high',
+register_post_fields( 'rewards', [
+    'title'      => __( 'Rewards', 'textdomain' ),
+    'post_types' => 'campaign',
     'fields'     => [
-        'featured' => [
-            'label' => __( 'Featured Post', 'textdomain' ),
-            'type'  => 'checkbox',
+        'rewards' => [
+            'label'        => __( 'Rewards', 'textdomain' ),
+            'type'         => 'repeater',
+            'button_label' => __( 'Add Reward', 'textdomain' ),
+            'fields'       => [
+                'reward_type' => [
+                    'label'   => __( 'Reward Type', 'textdomain' ),
+                    'type'    => 'select',
+                    'options' => [
+                        ''           => __( '— Select —', 'textdomain' ),
+                        'send_email' => __( 'Send Email', 'textdomain' ),
+                        'discount'   => __( 'Offer Discount', 'textdomain' ),
+                        'add_points' => __( 'Add Points', 'textdomain' ),
+                    ],
+                ],
+                'email_subject' => [
+                    'label'     => __( 'Email Subject', 'textdomain' ),
+                    'type'      => 'text',
+                    'show_when' => [ 'reward_type' => 'send_email' ],
+                ],
+                'email_body' => [
+                    'label'     => __( 'Email Body', 'textdomain' ),
+                    'type'      => 'textarea',
+                    'show_when' => [ 'reward_type' => 'send_email' ],
+                ],
+                'discount_amount' => [
+                    'label'     => __( 'Discount Amount', 'textdomain' ),
+                    'type'      => 'number',
+                    'show_when' => [ 'reward_type' => 'discount' ],
+                ],
+                'points' => [
+                    'label'     => __( 'Points to Add', 'textdomain' ),
+                    'type'      => 'number',
+                    'show_when' => [ 'reward_type' => 'add_points' ],
+                ],
+            ],
         ],
     ],
 ] );
@@ -147,17 +277,6 @@ Numeric input with optional constraints.
 ]
 ```
 
-For decimal values:
-
-```php
-'price' => [
-    'label' => __( 'Price', 'textdomain' ),
-    'type'  => 'number',
-    'min'   => 0,
-    'step'  => 0.01,
-]
-```
-
 ### Select
 
 Dropdown selection with static or dynamic options.
@@ -181,21 +300,11 @@ Dropdown selection with static or dynamic options.
     'options' => function() {
         $pages = get_pages();
         $options = [ '' => __( '— None —', 'textdomain' ) ];
-        
         foreach ( $pages as $page ) {
             $options[ $page->ID ] = $page->post_title;
         }
-        
         return $options;
     },
-]
-
-// Multiple selection
-'categories' => [
-    'label'    => __( 'Categories', 'textdomain' ),
-    'type'     => 'select',
-    'multiple' => true,
-    'options'  => [ /* ... */ ],
 ]
 ```
 
@@ -212,63 +321,6 @@ Boolean toggle field.
 ]
 ```
 
-### URL
-
-Text input with URL validation.
-
-```php
-'website' => [
-    'label'       => __( 'Website', 'textdomain' ),
-    'type'        => 'url',
-    'placeholder' => 'https://example.com',
-]
-```
-
-### Email
-
-Text input with email validation.
-
-```php
-'email' => [
-    'label'       => __( 'Email', 'textdomain' ),
-    'type'        => 'email',
-    'placeholder' => 'contact@example.com',
-]
-```
-
-### Color
-
-Color picker field.
-
-```php
-'brand_color' => [
-    'label'   => __( 'Brand Color', 'textdomain' ),
-    'type'    => 'color',
-    'default' => '#0073aa',
-]
-```
-
-### Date / DateTime / Time
-
-Date and time picker fields.
-
-```php
-'event_date' => [
-    'label' => __( 'Event Date', 'textdomain' ),
-    'type'  => 'date',
-]
-
-'event_datetime' => [
-    'label' => __( 'Event Date & Time', 'textdomain' ),
-    'type'  => 'datetime',
-]
-
-'start_time' => [
-    'label' => __( 'Start Time', 'textdomain' ),
-    'type'  => 'time',
-]
-```
-
 ### Image
 
 Single image picker from media library.
@@ -278,18 +330,6 @@ Single image picker from media library.
     'label'       => __( 'Featured Image', 'textdomain' ),
     'type'        => 'image',
     'button_text' => __( 'Select Image', 'textdomain' ),
-]
-```
-
-### File
-
-Single file picker from media library.
-
-```php
-'download_file' => [
-    'label'       => __( 'Download File', 'textdomain' ),
-    'type'        => 'file',
-    'button_text' => __( 'Select File', 'textdomain' ),
 ]
 ```
 
@@ -303,47 +343,6 @@ Multiple image picker with drag-and-drop reordering.
     'type'        => 'gallery',
     'max_items'   => 10,
     'button_text' => __( 'Add Images', 'textdomain' ),
-]
-```
-
-### Post Selector
-
-Select posts by post type.
-
-```php
-'related_posts' => [
-    'label'     => __( 'Related Posts', 'textdomain' ),
-    'type'      => 'post',
-    'post_type' => 'post',        // string or array
-    'multiple'  => true,
-    'display'   => 'checkbox',    // 'select' or 'checkbox'
-]
-```
-
-### User Selector
-
-Select users, optionally filtered by role.
-
-```php
-'author' => [
-    'label'    => __( 'Author', 'textdomain' ),
-    'type'     => 'user',
-    'role'     => [ 'author', 'editor' ],  // optional filter
-    'multiple' => false,
-]
-```
-
-### Term Selector
-
-Select taxonomy terms.
-
-```php
-'categories' => [
-    'label'    => __( 'Categories', 'textdomain' ),
-    'type'     => 'term',
-    'taxonomy' => 'category',
-    'multiple' => true,
-    'display'  => 'checkbox',
 ]
 ```
 
@@ -412,8 +411,6 @@ Dynamic repeatable field groups with drag-and-drop reordering.
 ]
 ```
 
-Supported field types inside repeaters: text, textarea, number, select, checkbox, url, email, image, file.
-
 ## Metabox Configuration Options
 
 | Option       | Type           | Default                    | Description                                     |
@@ -435,6 +432,7 @@ Supported field types inside repeaters: text, textarea, number, select, checkbox
 | `description`       | string          | `''`           | Help text displayed below the field             |
 | `default`           | mixed           | `''`           | Default value                                   |
 | `placeholder`       | string          | `''`           | Placeholder text for text inputs                |
+| `show_when`         | array           | `[]`           | Conditional visibility rules                    |
 | `options`           | array\|callable | `[]`           | Options for select fields                       |
 | `min`               | int\|float      | `null`         | Minimum value for number fields                 |
 | `max`               | int\|float      | `null`         | Maximum value for number fields                 |
@@ -448,22 +446,16 @@ Supported field types inside repeaters: text, textarea, number, select, checkbox
 | `max_items`         | int             | `0`            | Maximum items for gallery/repeater (0=unlimited)|
 | `min_items`         | int             | `0`            | Minimum items for repeater                      |
 | `collapsed`         | bool            | `false`        | Start repeater rows collapsed                   |
-| `button_text`       | string          | `''`           | Custom button text for media fields             |
-| `button_label`      | string          | `''`           | Custom button text for repeater add button      |
 
 ## Retrieving Field Values
 
 ### Standard Method
-
-Use WordPress's built-in function:
 
 ```php
 $value = get_post_meta( $post_id, 'price', true );
 ```
 
 ### With Default Fallback
-
-Use the helper function to automatically fall back to registered defaults:
 
 ```php
 $value = get_post_field_value( $post_id, 'price', 'product_info' );
@@ -480,38 +472,6 @@ if ( ! empty( $features ) && is_array( $features ) ) {
         echo $feature['title'];
         echo $feature['description'];
     }
-}
-```
-
-### Gallery Values
-
-```php
-$gallery = get_post_meta( $post_id, 'gallery', true );
-
-if ( ! empty( $gallery ) && is_array( $gallery ) ) {
-    foreach ( $gallery as $attachment_id ) {
-        echo wp_get_attachment_image( $attachment_id, 'medium' );
-    }
-}
-```
-
-### Group Values
-
-```php
-$dimensions = get_post_meta( $post_id, 'dimensions', true );
-
-if ( ! empty( $dimensions ) && is_array( $dimensions ) ) {
-    echo $dimensions['width'] . ' x ' . $dimensions['height'] . ' x ' . $dimensions['depth'];
-}
-```
-
-### Get All Registered Fields
-
-```php
-$fields = get_metabox_fields( 'product_info' );
-
-foreach ( $fields as $meta_key => $config ) {
-    echo $config['label'] . ': ' . get_post_meta( $post_id, $meta_key, true );
 }
 ```
 
@@ -534,107 +494,9 @@ Response includes:
     "price": 29.99,
     "features": [
       { "icon": "dashicons-star", "title": "Feature 1", "description": "..." }
-    ],
-    "gallery": [45, 46, 47]
+    ]
   }
 }
-```
-
-To disable REST API exposure for a field:
-
-```php
-'internal_notes' => [
-    'label'        => __( 'Internal Notes', 'textdomain' ),
-    'type'         => 'textarea',
-    'show_in_rest' => false,
-]
-```
-
-## Custom Sanitization
-
-Override the default sanitization for any field:
-
-```php
-'allowed_html' => [
-    'label'             => __( 'Content', 'textdomain' ),
-    'type'              => 'textarea',
-    'sanitize_callback' => function( $value ) {
-        return wp_kses( $value, [
-            'p'      => [],
-            'br'     => [],
-            'strong' => [],
-            'em'     => [],
-            'a'      => [ 'href' => [], 'title' => [] ],
-        ] );
-    },
-]
-```
-
-## Permission Control
-
-Control field visibility based on user capabilities:
-
-```php
-register_post_metabox( 'admin_settings', [
-    'title'      => __( 'Admin Settings', 'textdomain' ),
-    'post_types' => 'post',
-    'capability' => 'manage_options', // Only administrators
-    'fields'     => [
-        'internal_notes' => [
-            'label' => __( 'Internal Notes', 'textdomain' ),
-            'type'  => 'textarea',
-        ],
-    ],
-] );
-```
-
-## Meta Key Prefixing
-
-Automatically prefix all meta keys:
-
-```php
-register_post_metabox( 'product_data', [
-    'title'      => __( 'Product Data', 'textdomain' ),
-    'post_types' => 'product',
-    'prefix'     => '_product_',
-    'fields'     => [
-        'weight' => [ /* saved as _product_weight */ ],
-        'color'  => [ /* saved as _product_color */ ],
-    ],
-] );
-```
-
-## Integration with Register Columns
-
-This library pairs well with [wp-register-columns](https://github.com/arraypress/wp-register-columns) to display field values in admin list tables:
-
-```php
-// Register the metabox
-register_post_metabox( 'product_info', [
-    'title'      => __( 'Product Info', 'textdomain' ),
-    'post_types' => 'product',
-    'fields'     => [
-        'sku'   => [ 'label' => 'SKU', 'type' => 'text' ],
-        'price' => [ 'label' => 'Price', 'type' => 'number', 'step' => 0.01 ],
-    ],
-] );
-
-// Display in list table
-register_post_columns( 'product', [
-    'sku' => [
-        'label'    => __( 'SKU', 'textdomain' ),
-        'meta_key' => 'sku',
-        'sortable' => true,
-    ],
-    'price' => [
-        'label'            => __( 'Price', 'textdomain' ),
-        'meta_key'         => 'price',
-        'sortable'         => true,
-        'display_callback' => function( $value ) {
-            return $value ? '$' . number_format( $value, 2 ) : '—';
-        },
-    ],
-] );
 ```
 
 ## Contributing
@@ -648,8 +510,3 @@ GPL-2.0-or-later
 ## Author
 
 David Sherlock - [ArrayPress](https://arraypress.com/)
-
-## Support
-
-- [Documentation](https://github.com/arraypress/wp-register-post-metabox)
-- [Issue Tracker](https://github.com/arraypress/wp-register-post-metabox/issues)

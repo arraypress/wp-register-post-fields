@@ -1,7 +1,7 @@
 {
   "name": "arraypress/wp-register-post-fields",
-  "version": "1.0.0",
-  "description": "Lightweight library for registering custom metaboxes with fields on WordPress post edit screens.",
+  "version": "2.0.0",
+  "description": "Lightweight library for registering custom metaboxes with fields on WordPress post edit screens, featuring conditional field visibility, repeaters, and REST API integration.",
   "homepage": "https://github.com/arraypress/wp-register-post-fields/",
   "type": "library",
   "license": "GPL-2.0-or-later",
@@ -12,7 +12,8 @@
     }
   ],
   "require": {
-    "php": ">=7.4"
+    "php": ">=7.4",
+    "arraypress/wp-composer-assets": "^2.0"
   },
   "autoload": {
     "psr-4": {
@@ -40,6 +41,8 @@
     "custom-fields",
     "admin",
     "repeater",
-    "gallery"
+    "gallery",
+    "conditional-logic",
+    "show-when"
   ]
 }

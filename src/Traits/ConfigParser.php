@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     1.1.0
  * @author      David Sherlock
  */
 
@@ -30,32 +30,35 @@ trait ConfigParser {
 	 * @var array
 	 */
 	protected static array $field_types = [
-		'text'         => 'sanitize_text_field',
-		'textarea'     => 'sanitize_textarea_field',
-		'number'       => null,
-		'select'       => null,
-		'checkbox'     => null,
-		'url'          => 'esc_url_raw',
-		'email'        => 'sanitize_email',
-		'color'        => 'sanitize_hex_color',
-		'date'         => 'sanitize_text_field',
-		'datetime'     => 'sanitize_text_field',
-		'time'         => 'sanitize_text_field',
-		'image'        => 'absint',
-		'file'         => 'absint',
-		'gallery'      => null,
-		'wysiwyg'      => 'wp_kses_post',
-		'radio'        => 'sanitize_text_field',
-		'button_group' => 'sanitize_text_field',
-		'tel'          => 'sanitize_text_field',
-		'range'        => null,
-		'post'         => null,
-		'user'         => null,
-		'term'         => null,
-		'amount_type'  => null,
-		'group'        => null,
-		'repeater'     => null,
-		'ajax'         => null,
+		'text'          => 'sanitize_text_field',
+		'textarea'      => 'sanitize_textarea_field',
+		'number'        => null,
+		'select'        => null,
+		'checkbox'      => null,
+		'url'           => 'esc_url_raw',
+		'email'         => 'sanitize_email',
+		'color'         => 'sanitize_hex_color',
+		'date'          => 'sanitize_text_field',
+		'datetime'      => 'sanitize_text_field',
+		'time'          => 'sanitize_text_field',
+		'image'         => 'absint',
+		'file'          => 'absint',
+		'file_url'      => 'esc_url_raw',
+		'gallery'       => null,
+		'wysiwyg'       => 'wp_kses_post',
+		'radio'         => 'sanitize_text_field',
+		'button_group'  => 'sanitize_text_field',
+		'tel'           => 'sanitize_text_field',
+		'range'         => null,
+		'post'          => null,
+		'user'          => null,
+		'term'          => null,
+		'post_ajax'     => null,
+		'taxonomy_ajax' => null,
+		'amount_type'   => null,
+		'group'         => null,
+		'repeater'      => null,
+		'ajax'          => null,
 	];
 
 	/**
@@ -102,6 +105,7 @@ trait ConfigParser {
 			'label'             => '',
 			'type'              => 'text',
 			'description'       => '',
+			'tooltip'           => '',
 			'default'           => '',
 			'placeholder'       => '',
 			'options'           => [],
@@ -133,6 +137,8 @@ trait ConfigParser {
 			'max_items'         => 0,
 			'min_items'         => 0,
 			'collapsed'         => false,
+			'row_title'         => '',
+			'row_title_field'   => '',
 		];
 
 		$parsed = [];
@@ -186,6 +192,11 @@ trait ConfigParser {
 				if ( empty( $field['type_meta_key'] ) ) {
 					throw new Exception( sprintf( 'Field "%s" of type "amount_type" requires "type_meta_key" to be set.', $key ) );
 				}
+			}
+
+			// Validate taxonomy_ajax requirements
+			if ( $type === 'taxonomy_ajax' && empty( $field['taxonomy'] ) ) {
+				throw new Exception( sprintf( 'Field "%s" of type "taxonomy_ajax" requires "taxonomy" to be set.', $key ) );
 			}
 
 			// Validate nested fields

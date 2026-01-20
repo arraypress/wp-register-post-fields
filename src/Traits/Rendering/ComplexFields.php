@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits\Rendering
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     2.1.0
  * @author      David Sherlock
  */
 
@@ -118,6 +118,7 @@ trait ComplexFields {
 
                     <label class="arraypress-group__label">
                         <?php echo esc_html( $sub_field['label'] ); ?>
+                        <?php $this->render_tooltip( $sub_field ); ?>
                     </label>
 
                     <?php $this->render_nested_field_input( $sub_name, $sub_key, $sub_field, $sub_value ); ?>
@@ -156,6 +157,7 @@ trait ComplexFields {
         $min          = $field['min_items'] ?: 0;
         $layout       = $field['layout'] ?? 'vertical';
         $layout_class = 'arraypress-repeater--' . $layout;
+        $row_title    = $field['row_title'] ?? '';
 
         // Set parent field context for nested AJAX fields
         $this->set_parent_field_context( $meta_key );
@@ -164,7 +166,9 @@ trait ComplexFields {
              data-meta-key="<?php echo esc_attr( $meta_key ); ?>"
              data-max="<?php echo esc_attr( $max ); ?>"
              data-min="<?php echo esc_attr( $min ); ?>"
-             data-layout="<?php echo esc_attr( $layout ); ?>">
+             data-layout="<?php echo esc_attr( $layout ); ?>"
+             data-row-title="<?php echo esc_attr( $row_title ); ?>"
+             data-row-title-field="<?php echo esc_attr( $field['row_title_field'] ?? '' ); ?>">
 
             <?php if ( $layout === 'table' ) : ?>
                 <?php $this->render_repeater_table( $meta_key, $field, $value, $post_id ); ?>
@@ -241,6 +245,7 @@ trait ComplexFields {
                     ?>
                     <th <?php echo $width; ?>>
                         <?php echo esc_html( $sub_field['label'] ); ?>
+                        <?php $this->render_tooltip( $sub_field ); ?>
                     </th>
                 <?php endforeach; ?>
                 <th class="arraypress-repeater__table-actions"></th>
@@ -302,6 +307,9 @@ trait ComplexFields {
         if ( $is_horizontal ) {
             $row_class .= ' arraypress-repeater__row--horizontal';
         }
+
+        // Generate row title
+        $row_title = $this->get_repeater_row_title( $field, $value, $index );
         ?>
         <div class="<?php echo esc_attr( $row_class ); ?>"
              data-index="<?php echo esc_attr( $index ); ?>">
@@ -309,11 +317,8 @@ trait ComplexFields {
             <div class="arraypress-repeater__row-header">
                 <span class="arraypress-repeater__row-handle">☰</span>
                 <span class="arraypress-repeater__row-title">
-                    <?php printf(
-                            __( 'Item %s', 'arraypress' ),
-                            is_numeric( $index ) ? $index + 1 : '#'
-                    ); ?>
-                </span>
+					<?php echo esc_html( $row_title ); ?>
+				</span>
                 <?php if ( ! $is_horizontal ) : ?>
                     <button type="button" class="arraypress-repeater__row-toggle">▼</button>
                 <?php endif; ?>
@@ -344,6 +349,7 @@ trait ComplexFields {
                         <?php if ( ! $is_horizontal ) : ?>
                             <label class="arraypress-repeater__field-label">
                                 <?php echo esc_html( $sub_field['label'] ); ?>
+                                <?php $this->render_tooltip( $sub_field ); ?>
                             </label>
                         <?php endif; ?>
 
@@ -404,6 +410,66 @@ trait ComplexFields {
                 <button type="button" class="arraypress-repeater__row-remove">&times;</button>
             </td>
         </tr>
+        <?php
+    }
+
+    /**
+     * Generate the row title for a repeater row
+     *
+     * Supports:
+     * - Custom row_title with {index} placeholder: "File {index}" becomes "File 1", "File 2", etc.
+     * - row_title_field: Use a specific field's value as the title
+     * - Default: "Item 1", "Item 2", etc.
+     *
+     * @param array      $field The field configuration array.
+     * @param array      $value The row values.
+     * @param int|string $index The row index (or '__INDEX__' for template).
+     *
+     * @return string The row title.
+     */
+    protected function get_repeater_row_title( array $field, array $value, $index ): string {
+        $display_index = is_numeric( $index ) ? $index + 1 : '#';
+
+        // Check for row_title_field first (use a field's value as the title)
+        if ( ! empty( $field['row_title_field'] ) && ! empty( $value[ $field['row_title_field'] ] ) ) {
+            $field_value = $value[ $field['row_title_field'] ];
+
+            // If we also have a row_title pattern, combine them
+            if ( ! empty( $field['row_title'] ) ) {
+                return str_replace(
+                        [ '{index}', '{value}' ],
+                        [ $display_index, $field_value ],
+                        $field['row_title']
+                );
+            }
+
+            return $field_value;
+        }
+
+        // Check for custom row_title pattern
+        if ( ! empty( $field['row_title'] ) ) {
+            return str_replace( '{index}', $display_index, $field['row_title'] );
+        }
+
+        // Default title
+        return sprintf( __( 'Item %s', 'arraypress' ), $display_index );
+    }
+
+    /**
+     * Render tooltip icon and content if tooltip is set
+     *
+     * @param array $field The field configuration array.
+     *
+     * @return void
+     */
+    protected function render_tooltip( array $field ): void {
+        if ( empty( $field['tooltip'] ) ) {
+            return;
+        }
+        ?>
+        <span class="arraypress-tooltip" data-tooltip="<?php echo esc_attr( $field['tooltip'] ); ?>">
+			<span class="arraypress-tooltip__icon">?</span>
+		</span>
         <?php
     }
 

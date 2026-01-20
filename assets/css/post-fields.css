@@ -605,6 +605,13 @@
 }
 
 /**
+ * Individual field within repeater row
+ */
+.arraypress-repeater__field textarea {
+    width: 100%;
+}
+
+/**
  * jQuery UI Sortable placeholder
  */
 .arraypress-repeater__row.ui-sortable-placeholder {

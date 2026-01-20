@@ -78,6 +78,7 @@ trait ConfigParser {
 			'prefix'     => '',
 			'capability' => 'edit_posts',
 			'fields'     => [],
+			'full_width' => false,
 		];
 
 		$config = wp_parse_args( $config, $defaults );

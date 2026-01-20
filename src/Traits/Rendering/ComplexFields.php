@@ -162,7 +162,7 @@ trait ComplexFields {
         // Set parent field context for nested AJAX fields
         $this->set_parent_field_context( $meta_key );
         ?>
-        <div class="arraypress-repeater <?php echo esc_attr( $layout_class ); ?>"
+        <div class="arraypress-repeater <?php echo esc_attr( $layout_class ); ?><?php echo ! empty( $field['full_width'] ) ? ' arraypress-repeater--full-width' : ''; ?>"
              data-meta-key="<?php echo esc_attr( $meta_key ); ?>"
              data-max="<?php echo esc_attr( $max ); ?>"
              data-min="<?php echo esc_attr( $min ); ?>"

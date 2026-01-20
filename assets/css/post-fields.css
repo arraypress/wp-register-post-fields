@@ -931,6 +931,46 @@
 }
 
 /* ==========================================================================
+   Full Width Repeater
+   ========================================================================== */
+
+/**
+ * Full width horizontal repeater - fields stretch to fill space
+ */
+.arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__row-content {
+    width: 100%;
+}
+
+.arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__field {
+    flex: 1;
+}
+
+/**
+ * Full width vertical repeater
+ */
+.arraypress-repeater--full-width .arraypress-repeater__field input[type="text"],
+.arraypress-repeater--full-width .arraypress-repeater__field input[type="url"],
+.arraypress-repeater--full-width .arraypress-repeater__field input[type="email"],
+.arraypress-repeater--full-width .arraypress-repeater__field input[type="number"],
+.arraypress-repeater--full-width .arraypress-repeater__field input[type="tel"],
+.arraypress-repeater--full-width .arraypress-repeater__field select,
+.arraypress-repeater--full-width .arraypress-repeater__field textarea {
+    width: 100%;
+}
+
+.arraypress-repeater--full-width .arraypress-repeater__field .select2-container {
+    width: 100% !important;
+}
+
+.arraypress-repeater--full-width .arraypress-file-url-field {
+    width: 100%;
+}
+
+.arraypress-repeater--full-width .arraypress-file-url-field .arraypress-file-url-input {
+    flex: 1;
+}
+
+/* ==========================================================================
    16. Responsive Adjustments
    ========================================================================== */
 

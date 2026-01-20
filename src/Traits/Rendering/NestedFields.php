@@ -409,14 +409,13 @@ trait NestedFields {
      * @return void
      */
     protected function render_nested_file( string $name, array $field, $value ): void {
-        $file_url  = $value ? wp_get_attachment_url( $value ) : '';
-        $file_name = $value ? basename( get_attached_file( $value ) ) : '';
+        $file_url   = $value ? wp_get_attachment_url( $value ) : '';
+        $file_name  = $value ? basename( get_attached_file( $value ) ) : '';
+        $auto_title = ! empty( $field['auto_title_field'] ) ? $field['auto_title_field'] : '';
         ?>
-        <div class="arraypress-media-field arraypress-file-field" data-type="file">
-            <input type="hidden"
-                   name="<?php echo esc_attr( $name ); ?>"
-                   value="<?php echo esc_attr( $value ); ?>"
-                   class="arraypress-media-input"/>
+        <div class="arraypress-media-field arraypress-file-field"
+             data-type="file"
+                <?php echo $auto_title ? 'data-auto-title-field="' . esc_attr( $auto_title ) . '"' : ''; ?>>
 
             <div class="arraypress-file-preview">
                 <?php if ( $file_name ) : ?>
@@ -451,8 +450,10 @@ trait NestedFields {
     protected function render_nested_file_url( string $name, array $field, $value ): void {
         $button_text = $field['button_text'] ?: __( 'Browse', 'arraypress' );
         $placeholder = $field['placeholder'] ?: __( 'Enter URL or select from media library', 'arraypress' );
+        $auto_title  = ! empty( $field['auto_title_field'] ) ? $field['auto_title_field'] : '';
         ?>
-        <div class="arraypress-file-url-field">
+        <div class="arraypress-file-url-field"
+                <?php echo $auto_title ? 'data-auto-title-field="' . esc_attr( $auto_title ) . '"' : ''; ?>>
             <input type="text"
                    name="<?php echo esc_attr( $name ); ?>"
                    value="<?php echo esc_url( $value ); ?>"

@@ -135,6 +135,7 @@
         openMediaFrame: function ($field) {
             var $input = $field.find('.arraypress-media-input');
             var type = $field.data('type');
+            var autoTitleField = $field.data('auto-title-field');
 
             var frame = wp.media({
                 title: type === 'image' ? 'Select Image' : 'Select File',
@@ -148,7 +149,6 @@
                 $input.val(attachment.id).trigger('change');
 
                 if (type === 'image') {
-                    // Use thumbnail size if available, otherwise full URL
                     var url = attachment.sizes && attachment.sizes.thumbnail
                         ? attachment.sizes.thumbnail.url
                         : attachment.url;
@@ -156,7 +156,6 @@
                         '<img src="' + url + '" alt="" />'
                     );
                 } else {
-                    // File type - show filename with link
                     $field.find('.arraypress-file-preview').html(
                         '<a href="' + attachment.url + '" target="_blank">' +
                         attachment.filename +
@@ -165,6 +164,17 @@
                 }
 
                 $field.find('.arraypress-media-remove').show();
+
+                // Auto-fill title field if configured
+                if (autoTitleField && attachment.title) {
+                    var $row = $field.closest('.arraypress-repeater__row, .arraypress-group');
+                    var $titleInput = $row.find('[name*="[' + autoTitleField + ']"]');
+
+                    // Only fill if the title field is empty
+                    if ($titleInput.length && !$titleInput.val()) {
+                        $titleInput.val(attachment.title).trigger('change');
+                    }
+                }
             });
 
             frame.open();
@@ -219,6 +229,7 @@
          */
         openFileUrlFrame: function ($field) {
             var $input = $field.find('.arraypress-file-url-input');
+            var autoTitleField = $field.data('auto-title-field');
 
             var frame = wp.media({
                 title: 'Select File',
@@ -229,6 +240,17 @@
             frame.on('select', function () {
                 var attachment = frame.state().get('selection').first().toJSON();
                 $input.val(attachment.url).trigger('change');
+
+                // Auto-fill title field if configured
+                if (autoTitleField && attachment.title) {
+                    var $row = $field.closest('.arraypress-repeater__row, .arraypress-group');
+                    var $titleInput = $row.find('[name*="[' + autoTitleField + ']"]');
+
+                    // Only fill if the title field is empty
+                    if ($titleInput.length && !$titleInput.val()) {
+                        $titleInput.val(attachment.title).trigger('change');
+                    }
+                }
             });
 
             frame.open();

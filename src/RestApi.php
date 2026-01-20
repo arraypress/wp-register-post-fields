@@ -107,7 +107,7 @@ class RestApi {
 					'default'           => 'category',
 					'sanitize_callback' => 'sanitize_key',
 				],
-				'role' => [
+				'role'       => [
 					'type'              => 'string',
 					'default'           => '',
 					'sanitize_callback' => 'sanitize_text_field',

@@ -428,7 +428,7 @@ trait ComplexFields {
      * @return string The row title.
      */
     protected function get_repeater_row_title( array $field, array $value, $index ): string {
-        $display_index = is_numeric( $index ) ? $index + 1 : '#';
+        $display_index = is_numeric( $index ) ? (string) ( $index + 1 ) : '#';
 
         // Check for row_title_field first (use a field's value as the title)
         if ( ! empty( $field['row_title_field'] ) && ! empty( $value[ $field['row_title_field'] ] ) ) {

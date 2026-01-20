@@ -908,6 +908,29 @@
 }
 
 /* ==========================================================================
+   File URL Field in Table Layout
+   ========================================================================== */
+
+/**
+ * File URL field inline layout for table repeaters
+ */
+.arraypress-repeater--table .arraypress-file-url-field {
+    display: flex;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.arraypress-repeater--table .arraypress-file-url-field .arraypress-file-url-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.arraypress-repeater--table .arraypress-file-url-field .arraypress-file-url-browse {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
    16. Responsive Adjustments
    ========================================================================== */
 

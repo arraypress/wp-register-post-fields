@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     1.1.0
  * @author      David Sherlock
  */
 
@@ -70,8 +70,8 @@ trait AssetManager {
 	 * @return void
 	 */
 	protected function enqueue_wordpress_dependencies(): void {
-		// Enqueue media for image/file/gallery fields
-		if ( $this->has_field_type( [ 'image', 'file', 'gallery' ] ) ) {
+		// Enqueue media for image/file/gallery/file_url fields
+		if ( $this->has_field_type( [ 'image', 'file', 'gallery', 'file_url' ] ) ) {
 			wp_enqueue_media();
 		}
 
@@ -81,8 +81,8 @@ trait AssetManager {
 			wp_enqueue_script( 'wp-color-picker' );
 		}
 
-		// Enqueue Select2 for ajax fields
-		if ( $this->has_field_type( 'ajax' ) ) {
+		// Enqueue Select2 for all ajax-powered fields
+		if ( $this->has_field_type( [ 'ajax', 'post_ajax', 'taxonomy_ajax' ] ) ) {
 			$this->enqueue_select2();
 		}
 	}
@@ -161,7 +161,7 @@ trait AssetManager {
 			}
 
 			// Check nested fields in repeaters/groups
-			if ( in_array( $field['type'], [ 'repeater', 'group' ], true ) ) {
+			if ( in_array( $field['type'], [ 'repeater', 'group' ], true ) && ! empty( $field['fields'] ) ) {
 				foreach ( $field['fields'] as $nested_field ) {
 					if ( in_array( $nested_field['type'], $types, true ) ) {
 						return true;

@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.1.0
+ * @version     1.2.0
  * @author      David Sherlock
  */
 
@@ -35,20 +35,25 @@ trait ConfigParser {
 		'number'        => null,
 		'select'        => null,
 		'checkbox'      => null,
+		'toggle'        => null,
 		'url'           => 'esc_url_raw',
 		'email'         => 'sanitize_email',
 		'color'         => 'sanitize_hex_color',
 		'date'          => 'sanitize_text_field',
 		'datetime'      => 'sanitize_text_field',
 		'time'          => 'sanitize_text_field',
+		'date_range'    => null,
+		'time_range'    => null,
 		'image'         => 'absint',
 		'file'          => 'absint',
 		'file_url'      => 'esc_url_raw',
 		'gallery'       => null,
 		'wysiwyg'       => 'wp_kses_post',
+		'code'          => null,
 		'radio'         => 'sanitize_text_field',
 		'button_group'  => 'sanitize_text_field',
 		'tel'           => 'sanitize_text_field',
+		'password'      => null,
 		'range'         => null,
 		'post'          => null,
 		'user'          => null,
@@ -60,6 +65,9 @@ trait ConfigParser {
 		'group'         => null,
 		'repeater'      => null,
 		'ajax'          => null,
+		'link'          => null,
+		'oembed'        => null,
+		'dimensions'    => null,
 	];
 
 	/**
@@ -141,6 +149,18 @@ trait ConfigParser {
 			'collapsed'         => false,
 			'row_title'         => '',
 			'row_title_field'   => '',
+			// Code editor
+			'language'          => 'html',
+			'line_numbers'      => true,
+			// Link field
+			'show_title'        => true,
+			'show_target'       => true,
+			// Dimensions field
+			'dimension_labels'  => [],
+			'dimension_units'   => '',
+			// Date/Time range
+			'start_label'       => '',
+			'end_label'         => '',
 		];
 
 		$parsed = [];

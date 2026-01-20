@@ -945,6 +945,22 @@
     flex: 1;
 }
 
+/* ==========================================================================
+   Full Width Repeater
+   ========================================================================== */
+
+/**
+ * Full width horizontal repeater - fields stretch to fill space
+ */
+.arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__row-content {
+    width: 100%;
+}
+
+.arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__field {
+    flex: 1;
+    min-width: 0; /* ADD THIS - prevents flex items from overflowing */
+}
+
 /**
  * Full width vertical repeater
  */
@@ -968,6 +984,7 @@
 
 .arraypress-repeater--full-width .arraypress-file-url-field .arraypress-file-url-input {
     flex: 1;
+    min-width: 0; /* ADD THIS - same fix for the input inside file-url-field */
 }
 
 /* ==========================================================================

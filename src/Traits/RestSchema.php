@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     1.1.0
  * @author      David Sherlock
  */
 
@@ -35,9 +35,11 @@ trait RestSchema {
 		switch ( $type ) {
 			case 'number':
 			case 'amount_type':
+			case 'range':
 				return $this->get_number_schema( $field );
 
 			case 'checkbox':
+			case 'toggle':
 				return [
 					'type' => 'boolean',
 				];
@@ -65,7 +67,18 @@ trait RestSchema {
 				return $this->get_group_schema( $field );
 
 			case 'select':
+			case 'button_group':
 				return $this->get_select_schema( $field );
+
+			case 'link':
+				return $this->get_link_schema();
+
+			case 'date_range':
+			case 'time_range':
+				return $this->get_range_schema();
+
+			case 'dimensions':
+				return $this->get_dimensions_schema();
 
 			default:
 				return [ 'type' => 'string' ];
@@ -168,6 +181,52 @@ trait RestSchema {
 		return [
 			'type'       => 'object',
 			'properties' => $this->get_nested_schema_properties( $field['fields'] ),
+		];
+	}
+
+	/**
+	 * Get REST schema for a link field.
+	 *
+	 * @return array The REST schema.
+	 */
+	protected function get_link_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'url'    => [ 'type' => 'string', 'format' => 'uri' ],
+				'title'  => [ 'type' => 'string' ],
+				'target' => [ 'type' => 'string' ],
+			],
+		];
+	}
+
+	/**
+	 * Get REST schema for date/time range fields.
+	 *
+	 * @return array The REST schema.
+	 */
+	protected function get_range_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'start' => [ 'type' => 'string' ],
+				'end'   => [ 'type' => 'string' ],
+			],
+		];
+	}
+
+	/**
+	 * Get REST schema for dimensions field.
+	 *
+	 * @return array The REST schema.
+	 */
+	protected function get_dimensions_schema(): array {
+		return [
+			'type'       => 'object',
+			'properties' => [
+				'width'  => [ 'type' => 'number' ],
+				'height' => [ 'type' => 'number' ],
+			],
 		];
 	}
 

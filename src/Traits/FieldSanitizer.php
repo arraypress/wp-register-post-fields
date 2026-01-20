@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.1.0
+ * @version     1.2.0
  * @author      David Sherlock
  */
 
@@ -39,6 +39,7 @@ trait FieldSanitizer {
 
 		switch ( $type ) {
 			case 'checkbox':
+			case 'toggle':
 				return $value ? 1 : 0;
 
 			case 'range':
@@ -60,6 +61,9 @@ trait FieldSanitizer {
 
 			case 'wysiwyg':
 				return wp_kses_post( $value );
+
+			case 'code':
+				return $this->sanitize_code( $value, $field );
 
 			case 'color':
 				return sanitize_hex_color( $value );
@@ -90,6 +94,24 @@ trait FieldSanitizer {
 
 			case 'button_group':
 				return $this->sanitize_button_group( $value, $field );
+
+			case 'link':
+				return $this->sanitize_link( $value );
+
+			case 'oembed':
+				return esc_url_raw( $value );
+
+			case 'date_range':
+			case 'time_range':
+				return $this->sanitize_range_field( $value );
+
+			case 'dimensions':
+				return $this->sanitize_dimensions( $value, $field );
+
+			case 'password':
+				// Passwords should not be sanitized with sanitize_text_field
+				// as it may alter special characters
+				return $value;
 
 			case 'date':
 			case 'datetime':
@@ -319,6 +341,111 @@ trait FieldSanitizer {
 	}
 
 	/**
+	 * Sanitize a code field value.
+	 *
+	 * @param mixed $value The value to sanitize.
+	 * @param array $field The field configuration.
+	 *
+	 * @return string Sanitized value.
+	 */
+	protected function sanitize_code( $value, array $field ): string {
+		$language = $field['language'] ?? 'html';
+
+		// For HTML/CSS, allow more tags
+		if ( in_array( $language, [ 'html', 'css' ], true ) ) {
+			return wp_kses_post( $value );
+		}
+
+		// For other languages, just ensure it's a string
+		// We don't want to sanitize code too aggressively
+		return (string) $value;
+	}
+
+	/**
+	 * Sanitize a link field value.
+	 *
+	 * @param mixed $value The value to sanitize.
+	 *
+	 * @return array Sanitized value.
+	 */
+	protected function sanitize_link( $value ): array {
+		if ( ! is_array( $value ) ) {
+			return [
+				'url'    => '',
+				'title'  => '',
+				'target' => '',
+			];
+		}
+
+		return [
+			'url'    => isset( $value['url'] ) ? esc_url_raw( $value['url'] ) : '',
+			'title'  => isset( $value['title'] ) ? sanitize_text_field( $value['title'] ) : '',
+			'target' => isset( $value['target'] ) && $value['target'] === '_blank' ? '_blank' : '',
+		];
+	}
+
+	/**
+	 * Sanitize a date/time range field value.
+	 *
+	 * @param mixed $value The value to sanitize.
+	 *
+	 * @return array Sanitized value.
+	 */
+	protected function sanitize_range_field( $value ): array {
+		if ( ! is_array( $value ) ) {
+			return [
+				'start' => '',
+				'end'   => '',
+			];
+		}
+
+		return [
+			'start' => isset( $value['start'] ) ? sanitize_text_field( $value['start'] ) : '',
+			'end'   => isset( $value['end'] ) ? sanitize_text_field( $value['end'] ) : '',
+		];
+	}
+
+	/**
+	 * Sanitize a dimensions field value.
+	 *
+	 * @param mixed $value The value to sanitize.
+	 * @param array $field The field configuration.
+	 *
+	 * @return array Sanitized value.
+	 */
+	protected function sanitize_dimensions( $value, array $field ): array {
+		if ( ! is_array( $value ) ) {
+			return [
+				'width'  => '',
+				'height' => '',
+			];
+		}
+
+		$sanitized = [
+			'width'  => '',
+			'height' => '',
+		];
+
+		foreach ( [ 'width', 'height' ] as $dimension ) {
+			if ( isset( $value[ $dimension ] ) && $value[ $dimension ] !== '' ) {
+				$num = floatval( $value[ $dimension ] );
+
+				// Apply min/max constraints
+				if ( isset( $field['min'] ) && $num < $field['min'] ) {
+					$num = $field['min'];
+				}
+				if ( isset( $field['max'] ) && $num > $field['max'] ) {
+					$num = $field['max'];
+				}
+
+				$sanitized[ $dimension ] = $num;
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
 	 * Check if a repeater row has meaningful content.
 	 *
 	 * This method determines whether a row should be saved by checking if any
@@ -337,6 +464,7 @@ trait FieldSanitizer {
 			// Check based on field type
 			switch ( $type ) {
 				case 'checkbox':
+				case 'toggle':
 					// Checkbox with value 1 (checked) is content
 					if ( $value === 1 || $value === '1' || $value === true ) {
 						return true;
@@ -369,6 +497,7 @@ trait FieldSanitizer {
 					break;
 
 				case 'file_url':
+				case 'oembed':
 					// Non-empty URL is content
 					if ( ! empty( $value ) ) {
 						return true;
@@ -378,6 +507,28 @@ trait FieldSanitizer {
 				case 'gallery':
 					// Non-empty array is content
 					if ( is_array( $value ) && ! empty( $value ) ) {
+						return true;
+					}
+					break;
+
+				case 'link':
+					// Link with a URL is content
+					if ( is_array( $value ) && ! empty( $value['url'] ) ) {
+						return true;
+					}
+					break;
+
+				case 'date_range':
+				case 'time_range':
+					// Range with at least one value is content
+					if ( is_array( $value ) && ( ! empty( $value['start'] ) || ! empty( $value['end'] ) ) ) {
+						return true;
+					}
+					break;
+
+				case 'dimensions':
+					// Dimensions with at least one value is content
+					if ( is_array( $value ) && ( ! empty( $value['width'] ) || ! empty( $value['height'] ) ) ) {
 						return true;
 					}
 					break;

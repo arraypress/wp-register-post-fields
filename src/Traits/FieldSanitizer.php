@@ -50,6 +50,7 @@ trait FieldSanitizer {
 				return $this->sanitize_select( $value, $field );
 
 			case 'url':
+			case 'oembed':
 			case 'file_url':
 				return esc_url_raw( $value );
 
@@ -97,9 +98,6 @@ trait FieldSanitizer {
 
 			case 'link':
 				return $this->sanitize_link( $value );
-
-			case 'oembed':
-				return esc_url_raw( $value );
 
 			case 'date_range':
 			case 'time_range':

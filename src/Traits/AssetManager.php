@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.1.0
+ * @version     1.2.0
  * @author      David Sherlock
  */
 
@@ -70,8 +70,8 @@ trait AssetManager {
 	 * @return void
 	 */
 	protected function enqueue_wordpress_dependencies(): void {
-		// Enqueue media for image/file/gallery/file_url fields
-		if ( $this->has_field_type( [ 'image', 'file', 'gallery', 'file_url' ] ) ) {
+		// Enqueue media for image/file/gallery/file_url/link fields
+		if ( $this->has_field_type( [ 'image', 'file', 'gallery', 'file_url', 'link' ] ) ) {
 			wp_enqueue_media();
 		}
 
@@ -79,6 +79,11 @@ trait AssetManager {
 		if ( $this->has_field_type( 'color' ) ) {
 			wp_enqueue_style( 'wp-color-picker' );
 			wp_enqueue_script( 'wp-color-picker' );
+		}
+
+		// Enqueue CodeMirror for code fields
+		if ( $this->has_field_type( 'code' ) ) {
+			$this->enqueue_codemirror();
 		}
 
 		// Enqueue Select2 for all ajax-powered fields
@@ -104,11 +109,19 @@ trait AssetManager {
 			'css/post-fields.css'
 		);
 
+		// Build script dependencies
+		$script_deps = [ 'jquery', 'jquery-ui-sortable', 'wp-color-picker', 'arraypress-select2' ];
+
+		// Add CodeMirror dependency if code fields exist
+		if ( $this->has_field_type( 'code' ) ) {
+			$script_deps[] = 'wp-codemirror';
+		}
+
 		wp_enqueue_composer_script(
 			'arraypress-post-fields',
 			__FILE__,
 			'js/post-fields.js',
-			[ 'jquery', 'jquery-ui-sortable', 'wp-color-picker', 'arraypress-select2' ],
+			$script_deps,
 			false,
 			true
 		);
@@ -118,6 +131,12 @@ trait AssetManager {
 			'conditions' => $this->get_all_field_conditions(),
 			'restUrl'    => rest_url( 'arraypress-post-fields/v1/ajax' ),
 			'nonce'      => wp_create_nonce( 'wp_rest' ),
+			'i18n'       => [
+				'showPassword' => __( 'Show password', 'arraypress' ),
+				'hidePassword' => __( 'Hide password', 'arraypress' ),
+				'loadingEmbed' => __( 'Loading preview...', 'arraypress' ),
+				'embedError'   => __( 'Could not load preview for this URL.', 'arraypress' ),
+			],
 		] );
 
 		self::$assets_enqueued = true;
@@ -141,6 +160,35 @@ trait AssetManager {
 			'js/select2.min.js',
 			[ 'jquery' ]
 		);
+	}
+
+	/**
+	 * Enqueue CodeMirror for code editor fields.
+	 *
+	 * WordPress bundles CodeMirror, so we use the built-in version.
+	 *
+	 * @return void
+	 */
+	protected function enqueue_codemirror(): void {
+		// WordPress includes CodeMirror - we just need to enqueue it
+		$settings = wp_enqueue_code_editor( [
+			'type' => 'text/html',
+		] );
+
+		// If code editor was disabled by user settings, $settings will be false
+		if ( false === $settings ) {
+			return;
+		}
+
+		// Enqueue additional modes we might need
+		wp_enqueue_script( 'wp-codemirror' );
+		wp_enqueue_style( 'wp-codemirror' );
+
+		// Enqueue common modes
+		$modes = [ 'css', 'javascript', 'htmlmixed', 'xml', 'php', 'sql', 'markdown' ];
+		foreach ( $modes as $mode ) {
+			wp_enqueue_script( "codemirror-mode-{$mode}" );
+		}
 	}
 
 	/**

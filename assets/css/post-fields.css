@@ -8,7 +8,7 @@
  * @package     ArrayPress\RegisterPostFields
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     2.1.0
  * @author      David Sherlock
  *
  * Table of Contents:
@@ -27,7 +27,16 @@
  * 13. Repeater Field - Horizontal Layout
  * 14. Repeater Field - Table Layout
  * 15. Select2 Adjustments
- * 16. Responsive Adjustments
+ * 16. Toggle Switch
+ * 17. Password Field
+ * 18. Code Editor
+ * 19. Link Field
+ * 20. oEmbed Field
+ * 21. Date/Time Range Fields
+ * 22. Dimensions Field
+ * 23. Tooltips
+ * 24. Full Width Repeater
+ * 25. Responsive Adjustments
  */
 
 /* ==========================================================================
@@ -801,7 +810,422 @@
 }
 
 /* ==========================================================================
-   Tooltips
+   16. Toggle Switch
+   ========================================================================== */
+
+/**
+ * Toggle field container
+ */
+.arraypress-toggle-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/**
+ * Toggle switch wrapper
+ */
+.arraypress-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+/**
+ * Hidden checkbox input
+ */
+.arraypress-toggle__input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+/**
+ * Toggle slider/track
+ */
+.arraypress-toggle__slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #c3c4c7;
+    transition: 0.2s ease;
+    border-radius: 24px;
+}
+
+/**
+ * Toggle slider thumb
+ */
+.arraypress-toggle__slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #fff;
+    transition: 0.2s ease;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/**
+ * Toggle checked state
+ */
+.arraypress-toggle__input:checked + .arraypress-toggle__slider {
+    background-color: #2271b1;
+}
+
+.arraypress-toggle__input:checked + .arraypress-toggle__slider::before {
+    transform: translateX(20px);
+}
+
+/**
+ * Toggle focus state
+ */
+.arraypress-toggle__input:focus + .arraypress-toggle__slider {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2271b1;
+}
+
+/**
+ * Toggle labels
+ */
+.arraypress-toggle__label {
+    font-size: 13px;
+    color: #646970;
+}
+
+.arraypress-toggle__label-on,
+.arraypress-toggle__label-off {
+    display: none;
+}
+
+.arraypress-toggle__input:checked ~ .arraypress-toggle__label .arraypress-toggle__label-on {
+    display: inline;
+}
+
+.arraypress-toggle__input:not(:checked) ~ .arraypress-toggle__label .arraypress-toggle__label-off {
+    display: inline;
+}
+
+/**
+ * Toggle text label
+ */
+.arraypress-toggle__text {
+    font-weight: normal;
+}
+
+/* ==========================================================================
+   17. Password Field
+   ========================================================================== */
+
+/**
+ * Password field container
+ */
+.arraypress-password-field {
+    display: flex;
+    align-items: stretch;
+    max-width: 400px;
+}
+
+/**
+ * Password input
+ */
+.arraypress-password-field .arraypress-password-input {
+    flex: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+}
+
+/**
+ * Password toggle button
+ */
+.arraypress-password-toggle {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arraypress-password-toggle .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.arraypress-password-toggle:hover {
+    background: #f0f0f1;
+}
+
+/* ==========================================================================
+   18. Code Editor
+   ========================================================================== */
+
+/**
+ * Code field container
+ */
+.arraypress-code-field {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/**
+ * Code textarea (before CodeMirror init)
+ */
+.arraypress-code-editor {
+    width: 100%;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 10px;
+    border: none;
+    resize: vertical;
+}
+
+/**
+ * CodeMirror wrapper adjustments
+ */
+.arraypress-code-field .CodeMirror {
+    height: auto;
+    min-height: 150px;
+    max-height: 500px;
+    border: none;
+}
+
+.arraypress-code-field .CodeMirror-scroll {
+    min-height: 150px;
+}
+
+/* ==========================================================================
+   19. Link Field
+   ========================================================================== */
+
+/**
+ * Link field container
+ */
+.arraypress-link-field {
+    max-width: 500px;
+}
+
+/**
+ * Link field row
+ */
+.arraypress-link-field__row {
+    margin-bottom: 10px;
+}
+
+.arraypress-link-field__row:last-child {
+    margin-bottom: 0;
+}
+
+/**
+ * Link field label
+ */
+.arraypress-link-field__label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #646970;
+}
+
+/**
+ * Link field inputs
+ */
+.arraypress-link-field__url,
+.arraypress-link-field__title {
+    width: 100%;
+}
+
+/**
+ * Link field checkbox row
+ */
+.arraypress-link-field__row--checkbox {
+    margin-top: 8px;
+}
+
+.arraypress-link-field__row--checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   20. oEmbed Field
+   ========================================================================== */
+
+/**
+ * oEmbed field container
+ */
+.arraypress-oembed-field {
+    max-width: 600px;
+}
+
+/**
+ * oEmbed input wrapper
+ */
+.arraypress-oembed-field__input-wrapper {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.arraypress-oembed-field__input-wrapper .arraypress-oembed-input {
+    flex: 1;
+}
+
+/**
+ * oEmbed preview container
+ */
+.arraypress-oembed-preview {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.arraypress-oembed-preview iframe {
+    max-width: 100%;
+}
+
+/**
+ * oEmbed loading state
+ */
+.arraypress-oembed-preview.is-loading {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #646970;
+}
+
+/**
+ * oEmbed error state
+ */
+.arraypress-oembed-preview.is-error {
+    color: #d63638;
+    font-style: italic;
+}
+
+/**
+ * oEmbed help text
+ */
+.arraypress-oembed-field__help {
+    font-size: 12px;
+    color: #646970;
+    margin: 0;
+}
+
+/* ==========================================================================
+   21. Date/Time Range Fields
+   ========================================================================== */
+
+/**
+ * Range picker container
+ */
+.arraypress-range-picker {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/**
+ * Range picker field group
+ */
+.arraypress-range-picker__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/**
+ * Range picker label
+ */
+.arraypress-range-picker__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #646970;
+}
+
+/**
+ * Range picker input
+ */
+.arraypress-range-picker__input {
+    min-width: 140px;
+}
+
+/**
+ * Range picker separator
+ */
+.arraypress-range-picker__separator {
+    padding-bottom: 6px;
+    color: #646970;
+}
+
+/* ==========================================================================
+   22. Dimensions Field
+   ========================================================================== */
+
+/**
+ * Dimensions field container
+ */
+.arraypress-dimensions-field {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/**
+ * Dimensions input group
+ */
+.arraypress-dimensions__input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/**
+ * Dimensions label
+ */
+.arraypress-dimensions__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #646970;
+}
+
+/**
+ * Dimensions separator (×)
+ */
+.arraypress-dimensions__separator {
+    padding-bottom: 6px;
+    font-weight: bold;
+    color: #646970;
+}
+
+/**
+ * Dimensions units label
+ */
+.arraypress-dimensions__units {
+    padding-bottom: 6px;
+    color: #646970;
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   23. Tooltips
    ========================================================================== */
 
 /**
@@ -931,7 +1355,7 @@
 }
 
 /* ==========================================================================
-   Full Width Repeater
+   24. Full Width Repeater
    ========================================================================== */
 
 /**
@@ -943,22 +1367,7 @@
 
 .arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__field {
     flex: 1;
-}
-
-/* ==========================================================================
-   Full Width Repeater
-   ========================================================================== */
-
-/**
- * Full width horizontal repeater - fields stretch to fill space
- */
-.arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__row-content {
-    width: 100%;
-}
-
-.arraypress-repeater--full-width.arraypress-repeater--horizontal .arraypress-repeater__field {
-    flex: 1;
-    min-width: 0; /* ADD THIS - prevents flex items from overflowing */
+    min-width: 0;
 }
 
 /**
@@ -984,11 +1393,11 @@
 
 .arraypress-repeater--full-width .arraypress-file-url-field .arraypress-file-url-input {
     flex: 1;
-    min-width: 0; /* ADD THIS - same fix for the input inside file-url-field */
+    min-width: 0;
 }
 
 /* ==========================================================================
-   16. Responsive Adjustments
+   25. Responsive Adjustments
    ========================================================================== */
 
 @media screen and (max-width: 782px) {
@@ -1057,5 +1466,50 @@
     .arraypress-repeater--table .arraypress-repeater__table {
         display: block;
         overflow-x: auto;
+    }
+
+    /**
+     * Range pickers - stack on mobile
+     */
+    .arraypress-range-picker {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .arraypress-range-picker__separator {
+        display: none;
+    }
+
+    /**
+     * Dimensions - stack on mobile
+     */
+    .arraypress-dimensions-field {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .arraypress-dimensions__separator {
+        display: none;
+    }
+
+    /**
+     * Password field - full width on mobile
+     */
+    .arraypress-password-field {
+        max-width: 100%;
+    }
+
+    /**
+     * Link field - full width on mobile
+     */
+    .arraypress-link-field {
+        max-width: 100%;
+    }
+
+    /**
+     * oEmbed field - stack on mobile
+     */
+    .arraypress-oembed-field__input-wrapper {
+        flex-direction: column;
     }
 }

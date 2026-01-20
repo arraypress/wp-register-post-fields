@@ -3,12 +3,12 @@
  *
  * Handles all interactive functionality for the WordPress Register Post Fields library.
  * Provides support for media uploads, galleries, repeaters, conditional logic,
- * AJAX selects, button groups, range sliders, and more.
+ * AJAX selects, button groups, range sliders, password toggles, code editors, and oEmbed.
  *
  * @package     ArrayPress\RegisterPostFields
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     2.0.0
+ * @version     2.1.0
  * @author      David Sherlock
  *
  * Dependencies:
@@ -16,6 +16,7 @@
  * - jQuery UI Sortable
  * - WordPress Media Library (wp.media)
  * - WordPress Color Picker (wp-color-picker)
+ * - WordPress CodeMirror (wp-codemirror) - optional
  * - Select2 (for AJAX selects)
  *
  * Table of Contents:
@@ -29,6 +30,9 @@
  * 8. Button Groups
  * 9. Range Sliders
  * 10. AJAX Selects
+ * 11. Password Fields
+ * 12. Code Editors
+ * 13. oEmbed Fields
  */
 
 (function ($) {
@@ -45,6 +49,7 @@
      * @property {Object} conditions - Field conditional logic configurations
      * @property {string} restUrl    - REST API base URL for AJAX requests
      * @property {string} nonce      - WordPress REST API nonce
+     * @property {Object} i18n       - Internationalization strings
      */
     var config = window.arraypressPostFields || {};
 
@@ -75,6 +80,9 @@
             this.initAjaxSelects();
             this.initButtonGroups();
             this.initRangeSliders();
+            this.initPasswordFields();
+            this.initCodeEditors();
+            this.initOembedFields();
         },
 
         /* =====================================================================
@@ -555,6 +563,11 @@
                     .toggleClass('is-selected', $input.is(':checked'));
             });
 
+            // Initialize code editors in new row
+            $newRow.find('.arraypress-code-field').each(function () {
+                self.initSingleCodeEditor($(this));
+            });
+
             // Evaluate conditional fields in the new row
             this.evaluateRowConditions($newRow);
         },
@@ -611,6 +624,14 @@
 
             // Destroy Select2 before removing to prevent memory leaks
             $row.find('.select2-hidden-accessible').select2('destroy');
+
+            // Destroy CodeMirror instances if any
+            $row.find('.arraypress-code-editor').each(function () {
+                var cm = $(this).data('codemirror');
+                if (cm) {
+                    cm.toTextArea();
+                }
+            });
 
             $row.remove();
             this.updateRepeaterIndexes($repeater);
@@ -1211,6 +1232,220 @@
                 $select.trigger('change.select2');
             }).fail(function () {
                 console.warn('Failed to hydrate ajax select:', fieldKey);
+            });
+        },
+
+        /* =====================================================================
+           11. Password Fields
+           ===================================================================== */
+
+        /**
+         * Initialize password field toggle functionality
+         *
+         * Sets up show/hide toggle for password inputs.
+         *
+         * @memberof PostFields
+         * @return {void}
+         */
+        initPasswordFields: function () {
+            var i18n = config.i18n || {};
+
+            $(document).on('click', '.arraypress-password-toggle', function (e) {
+                e.preventDefault();
+
+                var $button = $(this);
+                var $field = $button.closest('.arraypress-password-field');
+                var $input = $field.find('.arraypress-password-input');
+                var $icon = $button.find('.dashicons');
+
+                if ($input.attr('type') === 'password') {
+                    // Show password
+                    $input.attr('type', 'text');
+                    $icon.removeClass('dashicons-visibility').addClass('dashicons-hidden');
+                    $button.attr('aria-label', i18n.hidePassword || 'Hide password');
+                } else {
+                    // Hide password
+                    $input.attr('type', 'password');
+                    $icon.removeClass('dashicons-hidden').addClass('dashicons-visibility');
+                    $button.attr('aria-label', i18n.showPassword || 'Show password');
+                }
+            });
+        },
+
+        /* =====================================================================
+           12. Code Editors
+           ===================================================================== */
+
+        /**
+         * Initialize code editor fields
+         *
+         * Sets up CodeMirror for code editing fields.
+         *
+         * @memberof PostFields
+         * @return {void}
+         */
+        initCodeEditors: function () {
+            var self = this;
+
+            // Initialize all code editors not in templates
+            $('.arraypress-code-field').each(function () {
+                var $field = $(this);
+
+                // Skip if in a template
+                if ($field.closest('.arraypress-repeater__template').length) {
+                    return;
+                }
+
+                self.initSingleCodeEditor($field);
+            });
+        },
+
+        /**
+         * Initialize a single code editor
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field - The code field container element
+         * @return {void}
+         */
+        initSingleCodeEditor: function ($field) {
+            var $textarea = $field.find('.arraypress-code-editor');
+
+            // Skip if already initialized
+            if ($textarea.data('codemirror')) {
+                return;
+            }
+
+            // Check if CodeMirror is available
+            if (typeof wp === 'undefined' || typeof wp.codeEditor === 'undefined') {
+                return;
+            }
+
+            var mode = $field.data('mode') || 'htmlmixed';
+            var lineNumbers = $field.data('line-numbers') !== 'false';
+
+            // Initialize WordPress CodeMirror
+            var editorSettings = wp.codeEditor.defaultSettings ? _.clone(wp.codeEditor.defaultSettings) : {};
+
+            editorSettings.codemirror = _.extend(
+                {},
+                editorSettings.codemirror,
+                {
+                    mode: mode,
+                    lineNumbers: lineNumbers,
+                    lineWrapping: true,
+                    indentUnit: 4,
+                    tabSize: 4,
+                    indentWithTabs: true
+                }
+            );
+
+            var editor = wp.codeEditor.initialize($textarea[0], editorSettings);
+
+            // Store reference for cleanup
+            if (editor && editor.codemirror) {
+                $textarea.data('codemirror', editor.codemirror);
+
+                // Ensure the textarea value is updated when CodeMirror changes
+                editor.codemirror.on('change', function (cm) {
+                    cm.save();
+                    $textarea.trigger('change');
+                });
+
+                // Refresh editor when it becomes visible (e.g., in collapsed repeater rows)
+                setTimeout(function () {
+                    editor.codemirror.refresh();
+                }, 100);
+            }
+        },
+
+        /* =====================================================================
+           13. oEmbed Fields
+           ===================================================================== */
+
+        /**
+         * Initialize oEmbed field preview functionality
+         *
+         * Sets up preview button click handlers for oEmbed fields.
+         *
+         * @memberof PostFields
+         * @return {void}
+         */
+        initOembedFields: function () {
+            var self = this;
+            var i18n = config.i18n || {};
+
+            // Preview button click
+            $(document).on('click', '.arraypress-oembed-preview-btn', function (e) {
+                e.preventDefault();
+
+                var $button = $(this);
+                var $field = $button.closest('.arraypress-oembed-field');
+                var $input = $field.find('.arraypress-oembed-input');
+                var $preview = $field.find('.arraypress-oembed-preview');
+                var url = $input.val();
+
+                if (!url) {
+                    $preview.hide().empty();
+                    return;
+                }
+
+                // Show loading state
+                $preview.show()
+                    .addClass('is-loading')
+                    .removeClass('is-error')
+                    .html(i18n.loadingEmbed || 'Loading preview...');
+
+                // Fetch oEmbed preview via AJAX
+                self.fetchOembedPreview(url, $preview);
+            });
+
+            // Also trigger preview on input blur if there's a value
+            $(document).on('blur', '.arraypress-oembed-input', function () {
+                var $input = $(this);
+                var $field = $input.closest('.arraypress-oembed-field');
+                var $preview = $field.find('.arraypress-oembed-preview');
+                var url = $input.val();
+
+                // Only auto-preview if preview is currently empty and we have a URL
+                if (url && $preview.children().length === 0) {
+                    $field.find('.arraypress-oembed-preview-btn').trigger('click');
+                }
+            });
+        },
+
+        /**
+         * Fetch oEmbed preview from WordPress
+         *
+         * @memberof PostFields
+         * @param {string} url      - The URL to fetch embed for
+         * @param {jQuery} $preview - The preview container element
+         * @return {void}
+         */
+        fetchOembedPreview: function (url, $preview) {
+            var i18n = config.i18n || {};
+
+            // Use WordPress oEmbed proxy endpoint
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'parse-embed',
+                    post_ID: $('#post_ID').val() || 0,
+                    shortcode: '[embed]' + url + '[/embed]'
+                }
+            }).done(function (response) {
+                $preview.removeClass('is-loading');
+
+                if (response.success && response.data && response.data.body) {
+                    $preview.html(response.data.body);
+                } else {
+                    $preview.addClass('is-error')
+                        .html(i18n.embedError || 'Could not load preview for this URL.');
+                }
+            }).fail(function () {
+                $preview.removeClass('is-loading')
+                    .addClass('is-error')
+                    .html(i18n.embedError || 'Could not load preview for this URL.');
             });
         }
     };

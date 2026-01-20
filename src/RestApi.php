@@ -107,6 +107,11 @@ class RestApi {
 					'default'           => 'category',
 					'sanitize_callback' => 'sanitize_key',
 				],
+				'role' => [
+					'type'              => 'string',
+					'default'           => '',
+					'sanitize_callback' => 'sanitize_text_field',
+				],
 			],
 		] );
 	}
@@ -161,6 +166,9 @@ class RestApi {
 
 			case 'taxonomy_ajax':
 				return $this->handle_taxonomy_search( $request );
+
+			case 'user_ajax':
+				return $this->handle_user_search( $request );
 
 			case 'ajax':
 			default:
@@ -347,6 +355,64 @@ class RestApi {
 					'label' => $term->name,
 				];
 			}
+		}
+
+		return new WP_REST_Response( $results, 200 );
+	}
+
+	/**
+	 * Handle user search request.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 *
+	 * @return WP_REST_Response
+	 */
+	protected function handle_user_search( WP_REST_Request $request ): WP_REST_Response {
+		$search  = $request->get_param( 'search' );
+		$include = $request->get_param( 'include' );
+		$role    = $request->get_param( 'role' );
+
+		// Parse include IDs if provided (for hydration)
+		$include_ids = null;
+		if ( ! empty( $include ) ) {
+			$include_ids = array_map( 'absint', explode( ',', $include ) );
+			$include_ids = array_filter( $include_ids );
+		}
+
+		// Build query args
+		$args = [
+			'number'  => 20,
+			'orderby' => 'display_name',
+			'order'   => 'ASC',
+		];
+
+		// Filter by role if specified
+		if ( ! empty( $role ) ) {
+			$roles = array_map( 'trim', explode( ',', $role ) );
+			$roles = array_filter( $roles );
+			if ( ! empty( $roles ) ) {
+				$args['role__in'] = $roles;
+			}
+		}
+
+		// If we have specific IDs to include (hydration), fetch those
+		if ( ! empty( $include_ids ) ) {
+			$args['include'] = $include_ids;
+			$args['number']  = count( $include_ids );
+		} elseif ( ! empty( $search ) ) {
+			// Search by name or email
+			$args['search']         = '*' . $search . '*';
+			$args['search_columns'] = [ 'user_login', 'user_email', 'display_name' ];
+		}
+
+		$users   = get_users( $args );
+		$results = [];
+
+		foreach ( $users as $user ) {
+			$results[] = [
+				'value' => $user->ID,
+				'label' => $user->display_name,
+			];
 		}
 
 		return new WP_REST_Response( $results, 200 );

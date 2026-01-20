@@ -801,6 +801,113 @@
 }
 
 /* ==========================================================================
+   Tooltips
+   ========================================================================== */
+
+/**
+ * Tooltip container - positioned relative to label
+ */
+.arraypress-tooltip {
+    position: relative;
+    display: inline-block;
+    margin-left: 4px;
+    cursor: help;
+}
+
+/**
+ * Tooltip icon (question mark)
+ */
+.arraypress-tooltip__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #646970;
+    background: #f0f0f1;
+    border: 1px solid #c3c4c7;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+.arraypress-tooltip:hover .arraypress-tooltip__icon {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+}
+
+/**
+ * Tooltip content bubble
+ */
+.arraypress-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: #1d2327;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    width: max-content;
+    max-width: 250px;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/**
+ * Tooltip arrow
+ */
+.arraypress-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1d2327;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/**
+ * Show tooltip on hover
+ */
+.arraypress-tooltip:hover::after,
+.arraypress-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/**
+ * Tooltip in table headers - adjust positioning
+ */
+.arraypress-repeater__table thead th .arraypress-tooltip::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
+.arraypress-repeater__table thead th .arraypress-tooltip::before {
+    bottom: auto;
+    top: calc(100% + 2px);
+    border-top-color: transparent;
+    border-bottom-color: #1d2327;
+}
+
+/* ==========================================================================
    16. Responsive Adjustments
    ========================================================================== */
 

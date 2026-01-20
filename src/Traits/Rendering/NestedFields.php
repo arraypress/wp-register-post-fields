@@ -130,8 +130,16 @@ trait NestedFields {
                 $this->render_nested_taxonomy_ajax( $name, $key, $field, $value );
                 break;
 
+            case 'user':
+                $this->render_nested_user( $name, $field, $value );
+                break;
+
             case 'tel':
                 $this->render_nested_tel( $name, $field, $value );
+                break;
+
+            case 'user_ajax':
+                $this->render_nested_user_ajax( $name, $key, $field, $value );
                 break;
 
             case 'url':
@@ -612,6 +620,97 @@ trait NestedFields {
                value="<?php echo esc_attr( $value ); ?>"
                class="regular-text"
                placeholder="<?php echo esc_attr( $placeholder ); ?>"/>
+        <?php
+    }
+
+    /**
+     * Render a nested user selector
+     *
+     * @param string $name  The input name attribute.
+     * @param array  $field The field configuration array.
+     * @param mixed  $value The current field value (user ID or array of IDs).
+     *
+     * @return void
+     */
+    protected function render_nested_user( string $name, array $field, $value ): void {
+        $args = [
+                'orderby' => 'display_name',
+                'order'   => 'ASC',
+        ];
+
+        // Filter by role if specified
+        if ( ! empty( $field['role'] ) ) {
+            $args['role__in'] = (array) $field['role'];
+        }
+
+        $users   = get_users( $args );
+        $options = [ '' => __( '— Select —', 'arraypress' ) ];
+
+        foreach ( $users as $user ) {
+            $options[ $user->ID ] = $user->display_name;
+        }
+
+        $multiple  = ! empty( $field['multiple'] );
+        $name_attr = $multiple ? $name . '[]' : $name;
+        $values    = $multiple ? (array) $value : [ $value ];
+        ?>
+        <select name="<?php echo esc_attr( $name_attr ); ?>"
+                <?php echo $multiple ? 'multiple' : ''; ?>>
+            <?php foreach ( $options as $option_value => $option_label ) : ?>
+                <option value="<?php echo esc_attr( $option_value ); ?>"
+                        <?php echo in_array( $option_value, $values, false ) ? 'selected' : ''; ?>>
+                    <?php echo esc_html( $option_label ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <?php
+    }
+
+    /**
+     * Render a nested user AJAX select
+     *
+     * @param string $name  The input name attribute.
+     * @param string $key   The field key.
+     * @param array  $field The field configuration array.
+     * @param mixed  $value The current field value.
+     *
+     * @return void
+     */
+    protected function render_nested_user_ajax( string $name, string $key, array $field, $value ): void {
+        $multiple    = ! empty( $field['multiple'] );
+        $placeholder = $field['placeholder'] ?? __( 'Search users...', 'arraypress' );
+        $roles       = (array) ( $field['role'] ?? [] );
+        $name_attr   = $multiple ? $name . '[]' : $name;
+        $values      = $multiple ? (array) $value : ( $value ? [ $value ] : [] );
+        $values      = array_filter( $values );
+
+        $metabox_id = $this->id;
+
+        $field_key_path = $key;
+        if ( ! empty( $this->current_parent_field ) ) {
+            $field_key_path = $this->current_parent_field . '.' . $key;
+        }
+        ?>
+        <select class="arraypress-ajax-select arraypress-user-ajax<?php echo $multiple ? ' multiple' : ''; ?>"
+                name="<?php echo esc_attr( $name_attr ); ?>"
+                <?php echo $multiple ? 'multiple' : ''; ?>
+                data-metabox-id="<?php echo esc_attr( $metabox_id ); ?>"
+                data-field-key="<?php echo esc_attr( $field_key_path ); ?>"
+                data-field-type="user_ajax"
+                data-role="<?php echo esc_attr( implode( ',', $roles ) ); ?>"
+                data-placeholder="<?php echo esc_attr( $placeholder ); ?>">
+            <?php
+            foreach ( $values as $user_id ) :
+                $user = get_userdata( $user_id );
+                if ( $user ) :
+                    ?>
+                    <option value="<?php echo esc_attr( $user_id ); ?>" selected>
+                        <?php echo esc_html( $user->display_name ); ?>
+                    </option>
+                <?php endif;
+            endforeach;
+            ?>
+        </select>
         <?php
     }
 

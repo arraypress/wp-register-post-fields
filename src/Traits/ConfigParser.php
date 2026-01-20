@@ -55,6 +55,7 @@ trait ConfigParser {
 		'term'          => null,
 		'post_ajax'     => null,
 		'taxonomy_ajax' => null,
+		'user_ajax'     => null,
 		'amount_type'   => null,
 		'group'         => null,
 		'repeater'      => null,

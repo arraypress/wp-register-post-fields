@@ -1119,6 +1119,8 @@
                         data.post_types = $select.data('post-types') || 'post';
                     } else if (fieldType === 'taxonomy_ajax') {
                         data.taxonomy = $select.data('taxonomy') || 'category';
+                    } else if (fieldType === 'user_ajax') {
+                        data.role = $select.data('role') || '';
                     }
 
                     return data;
@@ -1165,6 +1167,8 @@
                 data.post_types = $select.data('post-types') || 'post';
             } else if (fieldType === 'taxonomy_ajax') {
                 data.taxonomy = $select.data('taxonomy') || 'category';
+            } else if (fieldType === 'user_ajax') {
+                data.role = $select.data('role') || '';
             }
 
             $.ajax({

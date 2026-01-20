@@ -76,6 +76,7 @@ trait FieldSanitizer {
 			case 'term':
 			case 'post_ajax':
 			case 'taxonomy_ajax':
+			case 'user_ajax':
 				return $this->sanitize_relational( $value, $field );
 
 			case 'ajax':

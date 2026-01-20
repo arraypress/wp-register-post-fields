@@ -265,4 +265,52 @@ trait RelationalFields {
         <?php
     }
 
+    /**
+     * Render an AJAX-powered user selector field
+     *
+     * Select2-powered user selector with remote data loading via REST API.
+     * No custom callback required - uses built-in user search endpoint.
+     *
+     * @param string $meta_key The field's meta key.
+     * @param array  $field    The field configuration array.
+     * @param mixed  $value    The current field value.
+     *
+     * @return void
+     */
+    protected function render_user_ajax( string $meta_key, array $field, $value ): void {
+        $multiple    = ! empty( $field['multiple'] );
+        $placeholder = $field['placeholder'] ?? __( 'Search users...', 'arraypress' );
+        $roles       = (array) ( $field['role'] ?? [] );
+        $name        = $multiple ? $meta_key . '[]' : $meta_key;
+        $values      = $multiple ? (array) $value : ( $value ? [ $value ] : [] );
+        $values      = array_filter( $values );
+
+        // Get metabox ID from the instance property
+        $metabox_id = $this->id;
+        ?>
+        <select class="arraypress-ajax-select arraypress-user-ajax<?php echo $multiple ? ' multiple' : ''; ?>"
+                id="<?php echo esc_attr( $meta_key ); ?>"
+                name="<?php echo esc_attr( $name ); ?>"
+                <?php echo $multiple ? 'multiple' : ''; ?>
+                data-metabox-id="<?php echo esc_attr( $metabox_id ); ?>"
+                data-field-key="<?php echo esc_attr( $meta_key ); ?>"
+                data-field-type="user_ajax"
+                data-role="<?php echo esc_attr( implode( ',', $roles ) ); ?>"
+                data-placeholder="<?php echo esc_attr( $placeholder ); ?>">
+            <?php
+            // Pre-populate with existing values and their labels
+            foreach ( $values as $user_id ) :
+                $user = get_userdata( $user_id );
+                if ( $user ) :
+                    ?>
+                    <option value="<?php echo esc_attr( $user_id ); ?>" selected>
+                        <?php echo esc_html( $user->display_name ); ?>
+                    </option>
+                <?php endif;
+            endforeach;
+            ?>
+        </select>
+        <?php
+    }
+
 }

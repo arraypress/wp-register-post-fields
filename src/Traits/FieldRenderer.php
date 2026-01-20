@@ -221,6 +221,10 @@ trait FieldRenderer {
 				$this->render_taxonomy_ajax( $meta_key, $field, $value );
 				break;
 
+            case 'user_ajax':
+                $this->render_user_ajax( $meta_key, $field, $value );
+                break;
+
 			case 'ajax':
 				$this->render_ajax_select( $meta_key, $field, $value );
 				break;

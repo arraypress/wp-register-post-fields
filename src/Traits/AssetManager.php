@@ -82,7 +82,7 @@ trait AssetManager {
 		}
 
 		// Enqueue Select2 for all ajax-powered fields
-		if ( $this->has_field_type( [ 'ajax', 'post_ajax', 'taxonomy_ajax' ] ) ) {
+		if ( $this->has_field_type( [ 'ajax', 'post_ajax', 'taxonomy_ajax', 'user_ajax' ] ) ) {
 			$this->enqueue_select2();
 		}
 	}

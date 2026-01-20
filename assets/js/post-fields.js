@@ -22,12 +22,13 @@
  * 1. Configuration & Initialization
  * 2. Color Pickers
  * 3. Media Fields (Image/File)
- * 4. Gallery Fields
- * 5. Repeater Fields
- * 6. Conditional Logic
- * 7. Button Groups
- * 8. Range Sliders
- * 9. AJAX Selects
+ * 4. File URL Fields
+ * 5. Gallery Fields
+ * 6. Repeater Fields
+ * 7. Conditional Logic
+ * 8. Button Groups
+ * 9. Range Sliders
+ * 10. AJAX Selects
  */
 
 (function ($) {
@@ -67,6 +68,7 @@
         init: function () {
             this.initColorPickers();
             this.initMediaFields();
+            this.initFileUrlFields();
             this.initGalleryFields();
             this.initRepeaterFields();
             this.initConditionalLogic();
@@ -184,7 +186,56 @@
         },
 
         /* =====================================================================
-           4. Gallery Fields
+           4. File URL Fields
+           ===================================================================== */
+
+        /**
+         * Initialize file URL field interactions
+         *
+         * Sets up event handlers for the file URL browse button.
+         *
+         * @memberof PostFields
+         * @return {void}
+         */
+        initFileUrlFields: function () {
+            var self = this;
+
+            // Browse button click
+            $(document).on('click', '.arraypress-file-url-browse', function (e) {
+                e.preventDefault();
+                var $field = $(this).closest('.arraypress-file-url-field');
+                self.openFileUrlFrame($field);
+            });
+        },
+
+        /**
+         * Open WordPress media library frame for file URL selection
+         *
+         * Opens the media library and inserts the selected file's URL into the input.
+         *
+         * @memberof PostFields
+         * @param {jQuery} $field - The file URL field container element
+         * @return {void}
+         */
+        openFileUrlFrame: function ($field) {
+            var $input = $field.find('.arraypress-file-url-input');
+
+            var frame = wp.media({
+                title: 'Select File',
+                button: {text: 'Use this file'},
+                multiple: false
+            });
+
+            frame.on('select', function () {
+                var attachment = frame.state().get('selection').first().toJSON();
+                $input.val(attachment.url).trigger('change');
+            });
+
+            frame.open();
+        },
+
+        /* =====================================================================
+           5. Gallery Fields
            ===================================================================== */
 
         /**
@@ -317,7 +368,7 @@
         },
 
         /* =====================================================================
-           5. Repeater Fields
+           6. Repeater Fields
            ===================================================================== */
 
         /**
@@ -341,15 +392,35 @@
             // Remove row button click
             $(document).on('click', '.arraypress-repeater__row-remove', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 var $repeater = $(this).closest('.arraypress-repeater');
                 var $row = $(this).closest('.arraypress-repeater__row');
                 self.removeRepeaterRow($repeater, $row);
             });
 
-            // Toggle row collapse (vertical layout only)
+            // Toggle row collapse - click on toggle button
             $(document).on('click', '.arraypress-repeater__row-toggle', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 $(this).closest('.arraypress-repeater__row').toggleClass('is-collapsed');
+            });
+
+            // Toggle row collapse - click on header (excluding buttons)
+            $(document).on('click', '.arraypress-repeater__row-header', function (e) {
+                // Only toggle if clicking on the header itself or the title, not on buttons
+                var $target = $(e.target);
+                if ($target.is('button') || $target.closest('button').length) {
+                    return;
+                }
+
+                var $row = $(this).closest('.arraypress-repeater__row');
+                var $repeater = $row.closest('.arraypress-repeater');
+                var layout = $repeater.data('layout') || 'vertical';
+
+                // Only toggle for non-horizontal layouts
+                if (layout !== 'horizontal') {
+                    $row.toggleClass('is-collapsed');
+                }
             });
 
             // Make standard repeater rows sortable
@@ -400,6 +471,7 @@
             var layout = $repeater.data('layout') || 'vertical';
             var $template = $repeater.find('.arraypress-repeater__template');
             var max = parseInt($repeater.data('max')) || 0;
+            var rowTitle = $repeater.data('row-title') || '';
 
             // Get rows container based on layout type
             var $rows;
@@ -435,8 +507,9 @@
 
             $newRow.attr('data-index', newIndex);
 
-            // Update title for non-table layouts
-            $newRow.find('.arraypress-repeater__row-title').text('Item ' + (newIndex + 1));
+            // Update title based on row_title configuration or default
+            var displayTitle = this.generateRowTitle(rowTitle, newIndex, {});
+            $newRow.find('.arraypress-repeater__row-title').text(displayTitle);
 
             // Hide empty state row if present (table layout)
             $repeater.find('.arraypress-repeater__empty-row').hide();
@@ -462,6 +535,25 @@
 
             // Evaluate conditional fields in the new row
             this.evaluateRowConditions($newRow);
+        },
+
+        /**
+         * Generate row title based on configuration
+         *
+         * @memberof PostFields
+         * @param {string} titleTemplate - The title template with {index} placeholder
+         * @param {int} index - The row index (0-based)
+         * @param {object} rowData - The row data for field value substitution
+         * @return {string} The generated title
+         */
+        generateRowTitle: function (titleTemplate, index, rowData) {
+            var displayIndex = (typeof index === 'number') ? index + 1 : '#';
+
+            if (titleTemplate) {
+                return titleTemplate.replace('{index}', displayIndex);
+            }
+
+            return 'Item ' + displayIndex;
         },
 
         /**
@@ -514,8 +606,11 @@
          * @return {void}
          */
         updateRepeaterIndexes: function ($repeater) {
+            var self = this;
             var layout = $repeater.data('layout') || 'vertical';
             var metaKey = $repeater.data('meta-key');
+            var rowTitle = $repeater.data('row-title') || '';
+            var rowTitleField = $repeater.data('row-title-field') || '';
 
             // Get rows based on layout type
             var $rows;
@@ -528,7 +623,26 @@
             $rows.each(function (index) {
                 var $row = $(this);
                 $row.attr('data-index', index);
-                $row.find('.arraypress-repeater__row-title').text('Item ' + (index + 1));
+
+                // Generate title - check for row_title_field first
+                var displayTitle;
+                if (rowTitleField) {
+                    var $titleField = $row.find('[name*="[' + rowTitleField + ']"]');
+                    var fieldValue = $titleField.val();
+                    if (fieldValue) {
+                        if (rowTitle) {
+                            displayTitle = rowTitle.replace('{index}', index + 1).replace('{value}', fieldValue);
+                        } else {
+                            displayTitle = fieldValue;
+                        }
+                    } else {
+                        displayTitle = self.generateRowTitle(rowTitle, index, {});
+                    }
+                } else {
+                    displayTitle = self.generateRowTitle(rowTitle, index, {});
+                }
+
+                $row.find('.arraypress-repeater__row-title').text(displayTitle);
 
                 // Update all input names with new index
                 $row.find('[name]').each(function () {
@@ -540,7 +654,7 @@
         },
 
         /* =====================================================================
-           6. Conditional Logic
+           7. Conditional Logic
            ===================================================================== */
 
         /**
@@ -819,7 +933,7 @@
         },
 
         /* =====================================================================
-           7. Button Groups
+           8. Button Groups
            ===================================================================== */
 
         /**
@@ -850,7 +964,7 @@
         },
 
         /* =====================================================================
-           8. Range Sliders
+           9. Range Sliders
            ===================================================================== */
 
         /**
@@ -874,7 +988,7 @@
         },
 
         /* =====================================================================
-           9. AJAX Selects
+           10. AJAX Selects
            ===================================================================== */
 
         /**
@@ -920,41 +1034,20 @@
 
             var metaboxId = $select.data('metabox-id');
             var fieldKey = $select.data('field-key');
+            var fieldType = $select.data('field-type') || 'ajax';
             var isMultiple = $select.prop('multiple');
             var placeholder = $select.data('placeholder') || 'Search...';
             var restUrl = config.restUrl || '';
             var nonce = config.nonce || '';
 
+            // Build AJAX configuration based on field type
+            var ajaxConfig = this.buildAjaxConfig(fieldType, $select, restUrl, nonce, metaboxId, fieldKey);
+
             var select2Options = {
                 width: '100%',
                 allowClear: true,
                 placeholder: placeholder,
-                ajax: {
-                    url: restUrl,
-                    dataType: 'json',
-                    delay: 250,
-                    headers: {
-                        'X-WP-Nonce': nonce
-                    },
-                    data: function (params) {
-                        return {
-                            metabox_id: metaboxId,
-                            field_key: fieldKey,
-                            search: params.term || ''
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: data.map(function (item) {
-                                return {
-                                    id: item.value,
-                                    text: item.label
-                                };
-                            })
-                        };
-                    },
-                    cache: true
-                },
+                ajax: ajaxConfig,
                 minimumInputLength: 0
             };
 
@@ -972,9 +1065,62 @@
                 });
 
                 if (ids.length > 0) {
-                    self.hydrateAjaxSelect($select, ids, metaboxId, fieldKey, restUrl, nonce);
+                    self.hydrateAjaxSelect($select, ids, fieldType, metaboxId, fieldKey, restUrl, nonce);
                 }
             }
+        },
+
+        /**
+         * Build AJAX configuration for Select2 based on field type
+         *
+         * @memberof PostFields
+         * @param {string} fieldType - The field type (ajax, post_ajax, taxonomy_ajax)
+         * @param {jQuery} $select   - The select element
+         * @param {string} restUrl   - The REST API base URL
+         * @param {string} nonce     - The WP REST nonce
+         * @param {string} metaboxId - The metabox ID
+         * @param {string} fieldKey  - The field key
+         * @return {Object} AJAX configuration object
+         */
+        buildAjaxConfig: function (fieldType, $select, restUrl, nonce, metaboxId, fieldKey) {
+            var self = this;
+
+            return {
+                url: restUrl,
+                dataType: 'json',
+                delay: 250,
+                headers: {
+                    'X-WP-Nonce': nonce
+                },
+                data: function (params) {
+                    var data = {
+                        metabox_id: metaboxId,
+                        field_key: fieldKey,
+                        field_type: fieldType,
+                        search: params.term || ''
+                    };
+
+                    // Add type-specific parameters
+                    if (fieldType === 'post_ajax') {
+                        data.post_types = $select.data('post-types') || 'post';
+                    } else if (fieldType === 'taxonomy_ajax') {
+                        data.taxonomy = $select.data('taxonomy') || 'category';
+                    }
+
+                    return data;
+                },
+                processResults: function (data) {
+                    return {
+                        results: data.map(function (item) {
+                            return {
+                                id: item.value,
+                                text: item.label
+                            };
+                        })
+                    };
+                },
+                cache: true
+            };
         },
 
         /**
@@ -985,20 +1131,31 @@
          * @memberof PostFields
          * @param {jQuery} $select   - The select element
          * @param {Array}  ids       - Array of IDs to hydrate
+         * @param {string} fieldType - The field type
          * @param {string} metaboxId - The metabox ID
          * @param {string} fieldKey  - The field key
          * @param {string} restUrl   - The REST API URL
          * @param {string} nonce     - The WP REST nonce
          * @return {void}
          */
-        hydrateAjaxSelect: function ($select, ids, metaboxId, fieldKey, restUrl, nonce) {
+        hydrateAjaxSelect: function ($select, ids, fieldType, metaboxId, fieldKey, restUrl, nonce) {
+            var data = {
+                metabox_id: metaboxId,
+                field_key: fieldKey,
+                field_type: fieldType,
+                include: ids.join(',')
+            };
+
+            // Add type-specific parameters
+            if (fieldType === 'post_ajax') {
+                data.post_types = $select.data('post-types') || 'post';
+            } else if (fieldType === 'taxonomy_ajax') {
+                data.taxonomy = $select.data('taxonomy') || 'category';
+            }
+
             $.ajax({
                 url: restUrl,
-                data: {
-                    metabox_id: metaboxId,
-                    field_key: fieldKey,
-                    include: ids.join(',')
-                },
+                data: data,
                 headers: {
                     'X-WP-Nonce': nonce
                 }

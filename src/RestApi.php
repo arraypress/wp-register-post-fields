@@ -3,11 +3,12 @@
  * REST API Handler for Ajax Fields
  *
  * Handles AJAX search and hydration requests for ajax field types.
+ * Supports custom callbacks, post searches, and taxonomy term searches.
  *
  * @package     ArrayPress\RegisterPostFields
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     1.1.0
  * @author      David Sherlock
  */
 
@@ -81,6 +82,11 @@ class RestApi {
 					'type'              => 'string',
 					'sanitize_callback' => [ __CLASS__, 'sanitize_field_key' ],
 				],
+				'field_type' => [
+					'type'              => 'string',
+					'default'           => 'ajax',
+					'sanitize_callback' => 'sanitize_key',
+				],
 				'search'     => [
 					'type'              => 'string',
 					'default'           => '',
@@ -90,6 +96,16 @@ class RestApi {
 					'type'              => 'string',
 					'default'           => '',
 					'sanitize_callback' => 'sanitize_text_field',
+				],
+				'post_types' => [
+					'type'              => 'string',
+					'default'           => 'post',
+					'sanitize_callback' => 'sanitize_text_field',
+				],
+				'taxonomy'   => [
+					'type'              => 'string',
+					'default'           => 'category',
+					'sanitize_callback' => 'sanitize_key',
 				],
 			],
 		] );
@@ -130,11 +146,36 @@ class RestApi {
 	/**
 	 * Handle the AJAX request.
 	 *
+	 * Routes to appropriate handler based on field type.
+	 *
 	 * @param WP_REST_Request $request The request object.
 	 *
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function handle_request( WP_REST_Request $request ) {
+		$field_type = $request->get_param( 'field_type' );
+
+		switch ( $field_type ) {
+			case 'post_ajax':
+				return $this->handle_post_search( $request );
+
+			case 'taxonomy_ajax':
+				return $this->handle_taxonomy_search( $request );
+
+			case 'ajax':
+			default:
+				return $this->handle_custom_ajax( $request );
+		}
+	}
+
+	/**
+	 * Handle custom AJAX callback request.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 *
+	 * @return WP_REST_Response|WP_Error
+	 */
+	protected function handle_custom_ajax( WP_REST_Request $request ) {
 		$metabox_id = $request->get_param( 'metabox_id' );
 		$field_key  = $request->get_param( 'field_key' );
 		$search     = $request->get_param( 'search' );
@@ -180,23 +221,7 @@ class RestApi {
 		try {
 			$results = call_user_func( $callback, $search, $ids );
 
-			if ( ! is_array( $results ) ) {
-				return new WP_REST_Response( [], 200 );
-			}
-
-			// Normalize results to ensure value/label format
-			$normalized = array_values( array_filter( array_map( function ( $item ) {
-				if ( is_array( $item ) && isset( $item['value'] ) ) {
-					return [
-						'value' => $item['value'],
-						'label' => $item['label'] ?? $item['value'],
-					];
-				}
-
-				return null;
-			}, $results ) ) );
-
-			return new WP_REST_Response( $normalized, 200 );
+			return $this->normalize_results( $results );
 
 		} catch ( Exception $e ) {
 			return new WP_Error(
@@ -205,6 +230,152 @@ class RestApi {
 				[ 'status' => 500 ]
 			);
 		}
+	}
+
+	/**
+	 * Handle post search request.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 *
+	 * @return WP_REST_Response
+	 */
+	protected function handle_post_search( WP_REST_Request $request ): WP_REST_Response {
+		$search     = $request->get_param( 'search' );
+		$include    = $request->get_param( 'include' );
+		$post_types = $request->get_param( 'post_types' );
+
+		// Parse post types
+		$post_types = array_map( 'trim', explode( ',', $post_types ) );
+		$post_types = array_filter( $post_types );
+
+		if ( empty( $post_types ) ) {
+			$post_types = [ 'post' ];
+		}
+
+		// Parse include IDs if provided (for hydration)
+		$include_ids = null;
+		if ( ! empty( $include ) ) {
+			$include_ids = array_map( 'absint', explode( ',', $include ) );
+			$include_ids = array_filter( $include_ids );
+		}
+
+		// Build query args
+		$args = [
+			'post_type'      => $post_types,
+			'posts_per_page' => 20,
+			'orderby'        => 'title',
+			'order'          => 'ASC',
+			'post_status'    => 'publish',
+		];
+
+		// If we have specific IDs to include (hydration), fetch those
+		if ( ! empty( $include_ids ) ) {
+			$args['post__in']       = $include_ids;
+			$args['posts_per_page'] = count( $include_ids );
+			$args['orderby']        = 'post__in';
+		} elseif ( ! empty( $search ) ) {
+			// Otherwise search by title
+			$args['s'] = $search;
+		}
+
+		$posts   = get_posts( $args );
+		$results = [];
+
+		foreach ( $posts as $post ) {
+			$results[] = [
+				'value' => $post->ID,
+				'label' => $post->post_title,
+			];
+		}
+
+		return new WP_REST_Response( $results, 200 );
+	}
+
+	/**
+	 * Handle taxonomy term search request.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 *
+	 * @return WP_REST_Response|WP_Error
+	 */
+	protected function handle_taxonomy_search( WP_REST_Request $request ) {
+		$search   = $request->get_param( 'search' );
+		$include  = $request->get_param( 'include' );
+		$taxonomy = $request->get_param( 'taxonomy' );
+
+		// Validate taxonomy exists
+		if ( ! taxonomy_exists( $taxonomy ) ) {
+			return new WP_Error(
+				'invalid_taxonomy',
+				__( 'Invalid taxonomy.', 'arraypress' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Parse include IDs if provided (for hydration)
+		$include_ids = null;
+		if ( ! empty( $include ) ) {
+			$include_ids = array_map( 'absint', explode( ',', $include ) );
+			$include_ids = array_filter( $include_ids );
+		}
+
+		// Build query args
+		$args = [
+			'taxonomy'   => $taxonomy,
+			'hide_empty' => false,
+			'number'     => 20,
+			'orderby'    => 'name',
+			'order'      => 'ASC',
+		];
+
+		// If we have specific IDs to include (hydration), fetch those
+		if ( ! empty( $include_ids ) ) {
+			$args['include'] = $include_ids;
+			$args['number']  = count( $include_ids );
+		} elseif ( ! empty( $search ) ) {
+			// Otherwise search by name
+			$args['search'] = $search;
+		}
+
+		$terms   = get_terms( $args );
+		$results = [];
+
+		if ( ! is_wp_error( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$results[] = [
+					'value' => $term->term_id,
+					'label' => $term->name,
+				];
+			}
+		}
+
+		return new WP_REST_Response( $results, 200 );
+	}
+
+	/**
+	 * Normalize results to consistent format.
+	 *
+	 * @param mixed $results Raw results from callback.
+	 *
+	 * @return WP_REST_Response
+	 */
+	protected function normalize_results( $results ): WP_REST_Response {
+		if ( ! is_array( $results ) ) {
+			return new WP_REST_Response( [], 200 );
+		}
+
+		$normalized = array_values( array_filter( array_map( function ( $item ) {
+			if ( is_array( $item ) && isset( $item['value'] ) ) {
+				return [
+					'value' => $item['value'],
+					'label' => $item['label'] ?? $item['value'],
+				];
+			}
+
+			return null;
+		}, $results ) ) );
+
+		return new WP_REST_Response( $normalized, 200 );
 	}
 
 	/**
@@ -221,7 +392,7 @@ class RestApi {
 	 */
 	protected function get_field_config( string $metabox_id, string $field_key ): ?array {
 		// Check if this is a nested field path (contains a dot)
-		if ( strpos( $field_key, '.' ) !== false ) {
+		if ( str_contains( $field_key, '.' ) ) {
 			$parts      = explode( '.', $field_key );
 			$parent_key = $parts[0];
 			$child_key  = $parts[1];

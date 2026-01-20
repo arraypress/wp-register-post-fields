@@ -139,9 +139,7 @@ trait AssetManager {
 			'arraypress-select2',
 			__FILE__,
 			'js/select2.min.js',
-			[ 'jquery' ],
-			false,
-			true
+			[ 'jquery' ]
 		);
 	}
 

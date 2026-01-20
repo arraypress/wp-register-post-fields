@@ -7,7 +7,7 @@
  * @package     ArrayPress\RegisterPostFields\Traits
  * @copyright   Copyright (c) 2026, ArrayPress Limited
  * @license     GPL2+
- * @version     1.0.0
+ * @version     1.1.0
  * @author      David Sherlock
  */
 
@@ -49,6 +49,7 @@ trait FieldSanitizer {
 				return $this->sanitize_select( $value, $field );
 
 			case 'url':
+			case 'file_url':
 				return esc_url_raw( $value );
 
 			case 'email':
@@ -73,6 +74,8 @@ trait FieldSanitizer {
 			case 'post':
 			case 'user':
 			case 'term':
+			case 'post_ajax':
+			case 'taxonomy_ajax':
 				return $this->sanitize_relational( $value, $field );
 
 			case 'ajax':
@@ -163,7 +166,7 @@ trait FieldSanitizer {
 	}
 
 	/**
-	 * Sanitize a relational field value (post, user, term).
+	 * Sanitize a relational field value (post, user, term, post_ajax, taxonomy_ajax).
 	 *
 	 * @param mixed $value The value to sanitize.
 	 * @param array $field The field configuration.
@@ -348,6 +351,8 @@ trait FieldSanitizer {
 
 				case 'select':
 				case 'ajax':
+				case 'post_ajax':
+				case 'taxonomy_ajax':
 					// Non-empty select/ajax value
 					if ( $value !== '' && $value !== null && ! empty( $value ) ) {
 						return true;
@@ -358,6 +363,13 @@ trait FieldSanitizer {
 				case 'file':
 					// Valid attachment ID > 0 is content
 					if ( ! empty( $value ) && $value > 0 ) {
+						return true;
+					}
+					break;
+
+				case 'file_url':
+					// Non-empty URL is content
+					if ( ! empty( $value ) ) {
 						return true;
 					}
 					break;

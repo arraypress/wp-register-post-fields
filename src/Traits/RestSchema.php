@@ -46,6 +46,8 @@ trait RestSchema {
 			case 'file':
 			case 'post':
 			case 'term':
+			case 'taxonomy_ajax':
+			case 'post_ajax':
 			case 'user':
 				return $this->get_relational_schema( $field );
 

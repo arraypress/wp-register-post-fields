@@ -88,7 +88,7 @@ class PostFields {
 		Registry::register( $this->id, $this->config );
 
 		// Register REST API if needed
-		if ( $this->has_field_type( 'ajax' ) ) {
+		if ( $this->has_field_type( [ 'ajax', 'post_ajax', 'taxonomy_ajax' ] ) ) {
 			RestApi::register();
 		}
 

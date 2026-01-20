@@ -121,9 +121,7 @@ trait AssetManager {
 			'arraypress-post-fields',
 			__FILE__,
 			'js/post-fields.js',
-			$script_deps,
-			false,
-			true
+			$script_deps
 		);
 
 		// Localize script with configuration data

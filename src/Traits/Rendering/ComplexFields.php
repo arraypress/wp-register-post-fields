@@ -430,25 +430,30 @@ trait ComplexFields {
     protected function get_repeater_row_title( array $field, array $value, $index ): string {
         $display_index = is_numeric( $index ) ? (string) ( $index + 1 ) : '#';
 
-        // Check for row_title_field first (use a field's value as the title)
+        // Get field value if row_title_field is set
+        $field_value = '';
         if ( ! empty( $field['row_title_field'] ) && ! empty( $value[ $field['row_title_field'] ] ) ) {
             $field_value = $value[ $field['row_title_field'] ];
-
-            // If we also have a row_title pattern, combine them
-            if ( ! empty( $field['row_title'] ) ) {
-                return str_replace(
-                        [ '{index}', '{value}' ],
-                        [ $display_index, $field_value ],
-                        $field['row_title']
-                );
-            }
-
-            return $field_value;
         }
 
         // Check for custom row_title pattern
         if ( ! empty( $field['row_title'] ) ) {
-            return str_replace( '{index}', $display_index, $field['row_title'] );
+            $title = str_replace( '{index}', $display_index, $field['row_title'] );
+
+            // Replace {value} placeholder - remove it if empty
+            if ( ! empty( $field_value ) ) {
+                $title = str_replace( '{value}', $field_value, $title );
+            } else {
+                // Remove {value} and any preceding colon/space if value is empty
+                $title = preg_replace( '/[:\s]*\{value}/', '', $title );
+            }
+
+            return trim( $title );
+        }
+
+        // If we have a field value but no row_title pattern, just use the value
+        if ( ! empty( $field_value ) ) {
+            return $field_value;
         }
 
         // Default title

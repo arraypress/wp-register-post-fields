@@ -550,7 +550,10 @@
             var displayIndex = (typeof index === 'number') ? index + 1 : '#';
 
             if (titleTemplate) {
-                return titleTemplate.replace('{index}', displayIndex);
+                var title = titleTemplate.replace('{index}', displayIndex);
+                // Remove {value} placeholder for new rows (no value yet)
+                title = title.replace(/[:\s]*\{value\}/, '');
+                return title.trim();
             }
 
             return 'Item ' + displayIndex;
@@ -624,22 +627,33 @@
                 var $row = $(this);
                 $row.attr('data-index', index);
 
-                // Generate title - check for row_title_field first
-                var displayTitle;
+                // Get field value if rowTitleField is set
+                var fieldValue = '';
                 if (rowTitleField) {
                     var $titleField = $row.find('[name*="[' + rowTitleField + ']"]');
-                    var fieldValue = $titleField.val();
+                    fieldValue = $titleField.val() || '';
+                }
+
+                // Generate title
+                var displayTitle;
+                var displayIndex = index + 1;
+
+                if (rowTitle) {
+                    displayTitle = rowTitle.replace('{index}', displayIndex);
+
+                    // Replace {value} placeholder
                     if (fieldValue) {
-                        if (rowTitle) {
-                            displayTitle = rowTitle.replace('{index}', index + 1).replace('{value}', fieldValue);
-                        } else {
-                            displayTitle = fieldValue;
-                        }
+                        displayTitle = displayTitle.replace('{value}', fieldValue);
                     } else {
-                        displayTitle = self.generateRowTitle(rowTitle, index, {});
+                        // Remove {value} and any preceding colon/space if value is empty
+                        displayTitle = displayTitle.replace(/[:\s]*\{value\}/, '');
                     }
+
+                    displayTitle = displayTitle.trim();
+                } else if (fieldValue) {
+                    displayTitle = fieldValue;
                 } else {
-                    displayTitle = self.generateRowTitle(rowTitle, index, {});
+                    displayTitle = 'Item ' + displayIndex;
                 }
 
                 $row.find('.arraypress-repeater__row-title').text(displayTitle);

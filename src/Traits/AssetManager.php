@@ -97,6 +97,11 @@ trait AssetManager {
 	 *
 	 * @return void
 	 */
+	/**
+	 * Enqueue the library's CSS and JavaScript assets.
+	 *
+	 * @return void
+	 */
 	protected function enqueue_library_assets(): void {
 		// Only enqueue once across all metabox instances
 		if ( self::$assets_enqueued ) {
@@ -109,8 +114,18 @@ trait AssetManager {
 			'css/post-fields.css'
 		);
 
-		// Build script dependencies
-		$script_deps = [ 'jquery', 'jquery-ui-sortable', 'wp-color-picker', 'arraypress-select2' ];
+		// Build script dependencies - only add dependencies that are actually enqueued
+		$script_deps = [ 'jquery', 'jquery-ui-sortable' ];
+
+		// Add color picker dependency if color fields exist
+		if ( $this->has_field_type( 'color' ) ) {
+			$script_deps[] = 'wp-color-picker';
+		}
+
+		// Add Select2 dependency if ajax fields exist
+		if ( $this->has_field_type( [ 'ajax', 'post_ajax', 'taxonomy_ajax', 'user_ajax' ] ) ) {
+			$script_deps[] = 'arraypress-select2';
+		}
 
 		// Add CodeMirror dependency if code fields exist
 		if ( $this->has_field_type( 'code' ) ) {
